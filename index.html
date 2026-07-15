@@ -9,6 +9,8 @@
   <!-- Google Fonts & FontAwesome Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- HTML5 QR Code Library for Camera Scanning -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -20,6 +22,16 @@
     }
     .scanner-line {
       animation: scan 2s infinite ease-in-out;
+    }
+    /* Styling khusus agar video kamera responsif dan terpotong rapi */
+    #reader video {
+      object-fit: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 0.75rem;
+    }
+    #reader {
+      border: none !important;
     }
     /* Sembunyikan elemen saat mencetak, kecuali area laporan */
     @media print {
@@ -103,14 +115,29 @@
             </div>
             
             <p class="text-xs text-slate-500 mb-4">
-              Sistem memantau pembacaan barcode NIY secara otomatis. Pastikan input di bawah ini aktif (klik tombol Fokus jika tidak merespon).
+              Sistem memantau pembacaan barcode NIY secara otomatis. Pilih tombol di bawah untuk mengaktifkan pemindaian berbasis kamera HP Anda.
             </p>
 
-            <!-- Area visualisasi scanner -->
-            <div class="relative w-full aspect-video bg-slate-900 rounded-xl overflow-hidden mb-6 flex flex-col items-center justify-center border border-slate-800 shadow-inner">
+            <!-- Area Pilihan Fitur Scanner: Kamera vs Alat Laser Fisik -->
+            <div class="flex justify-between gap-2 mb-4">
+              <button id="btn-toggle-camera" onclick="toggleCameraScanner()" class="w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-camera text-sm"></i>
+                Aktifkan Kamera HP
+              </button>
+            </div>
+
+            <!-- 1. Area Visualisasi Laser (Default) -->
+            <div id="static-scanner-container" class="relative w-full aspect-video bg-slate-900 rounded-xl overflow-hidden mb-6 flex flex-col items-center justify-center border border-slate-800 shadow-inner">
               <div class="scanner-line absolute left-0 w-full h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] opacity-70"></div>
               <i class="fa-solid fa-barcode text-6xl text-slate-700 mb-2"></i>
               <span class="text-xs text-slate-400">Posisikan Barcode NIY ke Hadapan Scanner</span>
+            </div>
+
+            <!-- 2. Area Scanner Kamera (Ditampilkan saat aktif) -->
+            <div id="camera-scanner-container" class="relative w-full aspect-video bg-black rounded-xl overflow-hidden mb-6 hidden border border-slate-800 shadow-inner">
+              <div id="reader" class="w-full h-full"></div>
+              <!-- Laser line overlay for camera visual guide -->
+              <div class="scanner-line absolute left-0 w-full h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] opacity-70 pointer-events-none z-10"></div>
             </div>
 
             <!-- Input Penampung Barcode (Tetap Terfokus) -->
@@ -494,16 +521,20 @@
       logs: [],
       statusPreset: 'Hadir',
       todayScanCount: 0,
-      recentScans: []
+      recentScans: [],
+      isCameraActive: false // Status keaktifan scanner kamera
     };
+
+    // --- CAMERA ENGINE VARIABLES ---
+    let html5QrCode = null;
+    let lastScannedCode = "";
+    let lastScannedTime = 0;
 
     // --- UTILITY FUNCTIONS ---
     function getDirectPhotoUrl(url) {
       if (!url) return '';
-      // Deteksi jika link berasal dari Google Drive
       if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
         let fileId = '';
-        // Ekstrak ID File dari URL
         const matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
         const matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         
@@ -514,7 +545,6 @@
         }
         
         if (fileId) {
-          // Format thumbnail bypass proteksi CORS Google dengan resolusi tinggi (sz=w1000)
           return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
         }
       }
@@ -565,7 +595,8 @@
 
       document.addEventListener('click', (e) => {
         const isScanTabActive = !document.getElementById('tab-scan').classList.contains('hidden');
-        if (isScanTabActive && e.target.id !== 'barcode-input' && !e.target.closest('button') && !e.target.closest('input')) {
+        // Hanya arahkan fokus otomatis jika tidak sedang menggunakan kamera HP
+        if (isScanTabActive && !appState.isCameraActive && e.target.id !== 'barcode-input' && !e.target.closest('button') && !e.target.closest('input')) {
           focusBarcodeField();
         }
       });
@@ -687,6 +718,85 @@
         appState.logs = [...demoLogs];
         renderLogsTable();
         updateTodayStats();
+      }
+    }
+
+    // --- TOGGLE CAMERA SCANNER ---
+    async function toggleCameraScanner() {
+      const cameraContainer = document.getElementById('camera-scanner-container');
+      const staticContainer = document.getElementById('static-scanner-container');
+      const btnToggle = document.getElementById('btn-toggle-camera');
+
+      if (!appState.isCameraActive) {
+        // Aktifkan Kamera HP
+        staticContainer.classList.add('hidden');
+        cameraContainer.classList.remove('hidden');
+        btnToggle.innerHTML = '<i class="fa-solid fa-keyboard text-sm"></i> Gunakan Scanner Laser';
+        btnToggle.className = "w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5";
+        appState.isCameraActive = true;
+        startCameraScanner();
+      } else {
+        // Nonaktifkan Kamera HP
+        stopCameraScanner();
+        cameraContainer.classList.add('hidden');
+        staticContainer.classList.remove('hidden');
+        btnToggle.innerHTML = '<i class="fa-solid fa-camera text-sm"></i> Aktifkan Kamera HP';
+        btnToggle.className = "w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5";
+        appState.isCameraActive = false;
+        focusBarcodeField();
+      }
+    }
+
+    function startCameraScanner() {
+      // Inisialisasi library HTML5 QR Code di dalam div #reader
+      html5QrCode = new Html5Qrcode("reader");
+      
+      // Konfigurasi agar optimal membaca barcode 1D (persegi panjang)
+      const config = { 
+        fps: 15, 
+        qrbox: function(width, height) {
+          // Sesuaikan kotak deteksi barcode agar melebar menyamping
+          return { width: Math.min(width * 0.85, 280), height: 140 };
+        }
+      };
+
+      // Memulai kamera belakang ponsel (facingMode: environment)
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText, decodedResult) => {
+          const now = Date.now();
+          // Blokir scan berulang untuk kartu yang sama dalam jeda 3 detik
+          if (decodedText === lastScannedCode && (now - lastScannedTime < 3000)) {
+            return;
+          }
+          lastScannedCode = decodedText;
+          lastScannedTime = now;
+          
+          processBarcode(decodedText);
+        },
+        (errorMessage) => {
+          // Callback debug diabaikan agar tidak mengganggu performance loop scan
+        }
+      ).catch(err => {
+        console.error("Gagal menjalankan kamera HP: ", err);
+        showModal("Gagal Mengakses Kamera", "Browser Anda memblokir izin akses kamera atau kamera sedang digunakan oleh aplikasi lain.", "danger");
+        // Kembalikan ke mode statis
+        appState.isCameraActive = true;
+        toggleCameraScanner();
+      });
+    }
+
+    function stopCameraScanner() {
+      if (html5QrCode) {
+        if (html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            html5QrCode = null;
+          }).catch(err => console.error("Gagal menonaktifkan kamera: ", err));
+        } else {
+          html5QrCode = null;
+        }
       }
     }
 
@@ -849,7 +959,9 @@
         input.disabled = false;
         badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>Siap Men-Scan Kartu`;
         badge.className = "px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold flex items-center gap-1.5";
-        focusBarcodeField();
+        if (!appState.isCameraActive) {
+          focusBarcodeField();
+        }
       }
     }
 
@@ -943,7 +1055,10 @@
           el.className = "border-2 border-slate-200 text-slate-600 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition";
         }
       });
-      focusBarcodeField();
+      
+      if (!appState.isCameraActive) {
+        focusBarcodeField();
+      }
     }
 
     // --- RENDER TABEL DATA SISWA ---
@@ -1164,8 +1279,15 @@
         activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-indigo-700 text-white";
       }
 
-      if (tabName === 'scan') {
-        focusBarcodeField();
+      // Proteksi menghentikan kamera HP saat user berpindah dari tab Scan
+      if (tabName !== 'scan') {
+        if (appState.isCameraActive) {
+          toggleCameraScanner();
+        }
+      } else {
+        if (!appState.isCameraActive) {
+          focusBarcodeField();
+        }
       }
     }
 
@@ -1251,7 +1373,10 @@
       setTimeout(() => {
         modal.classList.add('hidden');
       }, 150);
-      focusBarcodeField();
+      
+      if (!appState.isCameraActive) {
+        focusBarcodeField();
+      }
     }
   </script>
 </body>
