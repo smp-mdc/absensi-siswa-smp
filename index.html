@@ -169,8 +169,8 @@
             </div>
 
             <!-- Foto Siswa -->
-            <div class="w-48 h-48 md:w-52 md:h-52 rounded-xl border-4 border-slate-100 bg-slate-100 shadow-md flex-shrink-0 overflow-hidden relative flex items-center justify-center">
-              <img id="student-photo" src="" alt="Foto Siswa" class="w-full h-full object-cover hidden">
+            <div class="w-48 h-48 md:w-52 md:h-52 rounded-xl border-4 border-slate-100 bg-slate-50 shadow-md flex-shrink-0 overflow-hidden relative flex items-center justify-center">
+              <img id="student-photo" src="" alt="Foto Siswa" class="w-full h-full object-contain hidden">
               <!-- Placeholder Icon jika tidak ada foto -->
               <div id="photo-placeholder" class="text-slate-300 flex flex-col items-center">
                 <i class="fa-solid fa-user-tie text-7xl"></i>
@@ -630,6 +630,7 @@
       }
     }
 
+    // Hitung log presensi hari ini
     function updateTodayStats() {
       const todayStr = new Date().toISOString().split('T')[0];
       const todayLogs = appState.logs.filter(log => {
@@ -957,7 +958,7 @@
       tbody.innerHTML = dataToRender.map(s => {
         const convertedUrl = getDirectPhotoUrl(s.foto);
         const imgTag = s.foto 
-          ? `<img src="${convertedUrl}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400\\'><i class=\\'fa-solid fa-user-tie\\'></i></div>';" class="w-10 h-10 object-cover rounded-full border border-slate-200 shadow-sm">` 
+          ? `<img src="${convertedUrl}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400\\'><i class=\\'fa-solid fa-user-tie\\'></i></div>';" class="w-10 h-10 object-contain rounded-full border border-slate-200 shadow-sm bg-slate-50">` 
           : `<div class="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400"><i class="fa-solid fa-user-tie"></i></div>`;
         return `
           <tr class="hover:bg-slate-50/70 transition">
