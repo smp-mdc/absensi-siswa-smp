@@ -50,7 +50,7 @@
           <i class="fa-solid fa-id-card-clip text-2xl"></i>
         </div>
         <div>
-          <h1 class="text-xl font-extrabold tracking-tight">E-ABSENSI (NIY)</h1>
+          <h1 class="text-xl font-extrabold tracking-tight">E-ABSENSI MDC (NIY)</h1>
           <p class="text-xs text-indigo-200">Smartcard Barcode Scanner System</p>
         </div>
       </div>
@@ -79,7 +79,7 @@
   <!-- NOTIFIKASI KONEKSI (no-print) -->
   <div id="conn-banner" class="bg-amber-500 text-white text-center py-1 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2">
     <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
-    <span>Menggunakan Mode Demo (Offline). Silakan hubungkan dengan Google Apps Script di tab Pengaturan untuk sinkronisasi Data NIY.xlsx.</span>
+    <span>Menggunakan Mode Demo (Offline). Hubungkan Google Sheets di tab Pengaturan untuk sinkronisasi cloud.</span>
   </div>
 
   <!-- MAIN CONTAINER -->
@@ -320,7 +320,7 @@
     <section id="tab-laporan" class="tab-content hidden">
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
         <h2 class="text-lg font-bold text-slate-800 mb-2">Penyusun Laporan Bulanan Rekapitulasi</h2>
-        <p class="text-xs text-slate-500 mb-6">Pilih kelas (7, 8, atau 9) dan tentukan masa bulan untuk membuat laporan cetak PDF resmi.</p>
+        <p class="text-xs text-slate-500 mb-6">Pilih kelas dan tentukan masa bulan untuk membuat laporan cetak PDF resmi.</p>
         
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-6">
           <div>
@@ -400,8 +400,8 @@
             <div class="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
               <input type="checkbox" id="offline-mode-chk" onchange="toggleOfflineMode()" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
               <div>
-                <span class="text-sm font-semibold text-slate-700 block">Gunakan Data Contoh Terintegrasi</span>
-                <span class="text-[11px] text-slate-400">Memuat data demo siswa kelas 7, 8, dan 9 untuk demonstrasi tanpa database online.</span>
+                <span class="text-sm font-semibold text-slate-700 block">Gunakan Data Contoh Riil (MDC)</span>
+                <span class="text-[11px] text-slate-400">Memuat data demo siswa riil Kelas 7, 8, dan 9 dari database sekolah tanpa koneksi online.</span>
               </div>
             </div>
           </div>
@@ -447,23 +447,43 @@
   </div>
 
   <script>
-    // --- CONTOH DATA SISWA KELAS 7, 8, 9 (SESUAI DATA NIY.XLSX) ---
+    // --- CONTOH DATA SISWA RIIL KELAS 7, 8, 9 DARI DATA NIY.XLSX (SMP KR. MDC) ---
     const demoStudents = [
       // KELAS 7
-      { niy: "2607001", nama: "Aulia Rahma", kelas: "7A", foto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250&auto=format&fit=crop" },
-      { niy: "2607002", nama: "Bintang Pratama", kelas: "7B", foto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=250&auto=format&fit=crop" },
+      { niy: "134202601068", nama: "ADRIELLE BERNADETTE WANG", kelas: "7A", foto: "" },
+      { niy: "134202601069", nama: "ALEXANDER WISELY KOBE", kelas: "7B", foto: "" },
+      { niy: "104202601070", nama: "BRITNEY ROXANNE LIONG", kelas: "7B", foto: "" },
+      { niy: "124202601071", nama: "CAROLINE YAO", kelas: "7B", foto: "" },
+      { niy: "124202601072", nama: "CELLINE LOUISA LIM", kelas: "7A", foto: "" },
+      { niy: "134202601073", nama: "FRANCIS MARVEL WINALDY", kelas: "7A", foto: "" },
+      { niy: "134202601091", nama: "MARIA JOEVANCA LIM", kelas: "7A", foto: "" },
+      { niy: "104202601094", nama: "NATHANIEL ENZO TAN", kelas: "7A", foto: "" },
+      { niy: "104202601095", nama: "RAFAEL SAPUTRA", kelas: "7B", foto: "" },
+      
       // KELAS 8
-      { niy: "2508001", nama: "Cahaya Indah", kelas: "8A", foto: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=250&auto=format&fit=crop" },
-      { niy: "2508002", nama: "Dimas Setiawan", kelas: "8B", foto: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=250&auto=format&fit=crop" },
+      { niy: "114202501014", nama: "AARON CHONG", kelas: "8C", foto: "" },
+      { niy: "134202501063", nama: "ABIGAIL VICTORIA UMBOH", kelas: "8C", foto: "" },
+      { niy: "124202501015", nama: "ALVARO GAVRIEL WIJAYANOTO", kelas: "8B", foto: "" },
+      { niy: "124202501016", nama: "AUSTIN RASYID GANDHA", kelas: "8A", foto: "" },
+      { niy: "134202501017", nama: "CAYDEN NATHANAEL BUNARDI", kelas: "8A", foto: "" },
+      { niy: "104202501053", nama: "OSTEN EDUARDO GAIDEK", kelas: "8B", foto: "" },
+      { niy: "134202501054", nama: "REINNER DOMINIC NUGROHO", kelas: "8C", foto: "" },
+      { niy: "114202501056", nama: "SAMUEL BILLY YULIYANTO", kelas: "8A", foto: "" },
+      
       // KELAS 9
-      { niy: "2409001", nama: "Erlangga Putra", kelas: "9A", foto: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=250&auto=format&fit=crop" },
-      { niy: "2409002", nama: "Fitri Handayani", kelas: "9B", foto: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=250&auto=format&fit=crop" }
+      { niy: "124202400969", nama: "ALISON OLIVIA OEN", kelas: "9C", foto: "" },
+      { niy: "134202400970", nama: "ARWEN EMMANUELLA HARIANTO", kelas: "9B", foto: "" },
+      { niy: "124202400971", nama: "BIANCA ALLEGRA KUSMONO", kelas: "9B", foto: "" },
+      { niy: "124202400972", nama: "BRIAN WILLIAM LOKANANTA", kelas: "9A", foto: "" },
+      { niy: "104202400973", nama: "CAITHLEEN GERALDINE SUGIARTO", kelas: "9C", foto: "" },
+      { niy: "134202400999", nama: "KLEMENS IMANUEL MARANATA", kelas: "9B", foto: "" },
+      { niy: "134202401000", nama: "LEONARD VINCE GUNAWAN", kelas: "9B", foto: "" }
     ];
 
     const demoLogs = [
-      { waktu: "2026-07-15T07:05:12", niy: "2409001", nama: "Erlangga Putra", kelas: "9A", status: "Hadir" },
-      { waktu: "2026-07-15T07:11:34", niy: "2508001", nama: "Cahaya Indah", kelas: "8A", status: "Hadir" },
-      { waktu: "2026-07-15T07:18:44", niy: "2607001", nama: "Aulia Rahma", kelas: "7A", status: "Hadir" }
+      { waktu: "2026-07-15T07:05:12", niy: "124202400969", nama: "ALISON OLIVIA OEN", kelas: "9C", status: "Hadir" },
+      { waktu: "2026-07-15T07:11:34", niy: "114202501014", nama: "AARON CHONG", kelas: "8C", status: "Hadir" },
+      { waktu: "2026-07-15T07:18:44", niy: "134202601068", nama: "ADRIELLE BERNADETTE WANG", kelas: "7A", status: "Hadir" }
     ];
 
     // --- STATE MANAGEMENT ---
@@ -476,6 +496,30 @@
       todayScanCount: 0,
       recentScans: []
     };
+
+    // --- UTILITY FUNCTIONS ---
+    function getDirectPhotoUrl(url) {
+      if (!url) return '';
+      // Deteksi jika link berasal dari Google Drive
+      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
+        let fileId = '';
+        // Ekstrak ID File dari URL
+        const matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        const matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        
+        if (matchD && matchD[1]) {
+          fileId = matchD[1];
+        } else if (matchId && matchId[1]) {
+          fileId = matchId[1];
+        }
+        
+        if (fileId) {
+          // Format thumbnail bypass proteksi CORS Google dengan resolusi tinggi (sz=w1000)
+          return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+        }
+      }
+      return url;
+    }
 
     let audioCtx = null;
     function playBeep(success = true) {
@@ -536,11 +580,11 @@
       const banner = document.getElementById('conn-banner');
       if (appState.isOffline) {
         banner.className = "bg-amber-500 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
-        banner.querySelector('span').innerText = "Menggunakan Mode Demo (Offline). Hubungkan Google Sheets di tab Pengaturan untuk sinkronisasi Data NIY.xlsx.";
+        banner.querySelector('span').innerText = "Menggunakan Mode Demo (Offline). Hubungkan Google Sheets di tab Pengaturan untuk sinkronisasi Data Kelas.";
       } else {
         if (appState.gasUrl) {
           banner.className = "bg-emerald-600 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
-          banner.querySelector('span').innerText = "Sistem Online! Terhubung dengan database cloud.";
+          banner.querySelector('span').innerText = "Sistem Online! Terhubung dengan database cloud Google Sheets.";
         } else {
           banner.className = "bg-rose-500 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
           banner.querySelector('span').innerText = "Belum Terkoneksi! Masukkan URL Google Apps Script Anda di Pengaturan.";
@@ -723,12 +767,23 @@
       document.getElementById('card-decor-bg').className = "absolute -right-10 -bottom-10 opacity-10 pointer-events-none transition-all duration-500 text-emerald-500";
 
       if (siswa.foto) {
-        img.src = siswa.foto;
-        img.classList.remove('hidden');
-        placeholder.classList.add('hidden');
+        const convertedUrl = getDirectPhotoUrl(siswa.foto);
+        img.src = convertedUrl;
+        img.onload = () => {
+          img.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+        };
+        // Fallback jika konversi gagal / file tidak diset publik
+        img.onerror = () => {
+          img.classList.add('hidden');
+          placeholder.classList.remove('hidden');
+          placeholder.innerHTML = '<i class="fa-solid fa-user-lock text-7xl text-slate-300"></i><span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mt-2">Akses Terkunci</span>';
+          console.warn("Gagal memuat foto dari Google Drive. Pastikan pengaturan berbagi file diset 'Siapa saja yang memiliki link'.");
+        };
       } else {
         img.classList.add('hidden');
         placeholder.classList.remove('hidden');
+        placeholder.innerHTML = '<i class="fa-solid fa-user-tie text-7xl"></i><span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mt-2">Menunggu Kartu</span>';
       }
 
       niyBadge.innerText = `NIY: ${siswa.niy}`;
@@ -850,7 +905,7 @@
         <div class="flex items-center space-x-3">
           <span class="font-bold text-slate-400 font-mono">${timeStr}</span>
           <div>
-            <span class="font-bold text-slate-800 block">${log.nama}</span>
+            <span class="font-bold text-slate-800 block text-ellipsis overflow-hidden max-w-[200px] whitespace-nowrap">${log.nama}</span>
             <span class="text-[10px] text-slate-500">Kelas ${log.kelas} - NIY: ${log.niy}</span>
           </div>
         </div>
@@ -900,7 +955,10 @@
       }
 
       tbody.innerHTML = dataToRender.map(s => {
-        const imgTag = s.foto ? `<img src="${s.foto}" class="w-10 h-10 object-cover rounded-full border border-slate-200 shadow-sm">` : `<div class="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400"><i class="fa-solid fa-user-tie"></i></div>`;
+        const convertedUrl = getDirectPhotoUrl(s.foto);
+        const imgTag = s.foto 
+          ? `<img src="${convertedUrl}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400\\'><i class=\\'fa-solid fa-user-tie\\'></i></div>';" class="w-10 h-10 object-cover rounded-full border border-slate-200 shadow-sm">` 
+          : `<div class="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400"><i class="fa-solid fa-user-tie"></i></div>`;
         return `
           <tr class="hover:bg-slate-50/70 transition">
             <td class="p-4">${imgTag}</td>
@@ -988,10 +1046,10 @@
           <!-- KOP SURAT SEKOLAH -->
           <div class="flex items-center justify-between border-b-4 border-slate-800 pb-4 mb-6">
             <div class="flex items-center space-x-4">
-              <div class="w-14 h-14 bg-indigo-900 text-white rounded-full flex items-center justify-center text-3xl font-extrabold">S</div>
+              <div class="w-14 h-14 bg-indigo-900 text-white rounded-full flex items-center justify-center text-3xl font-extrabold">M</div>
               <div>
-                <h1 class="text-md font-black tracking-tight uppercase text-slate-900">YAYASAN PENDIDIKAN TUNAS BANGSA</h1>
-                <p class="text-xs text-slate-500">Pusat Informasi Siswa Kelas 7, 8, dan 9 | Jawa Timur | Telp: (031) 987654</p>
+                <h1 class="text-md font-black tracking-tight uppercase text-slate-900">SMP KRISTEN MDC</h1>
+                <p class="text-xs text-slate-500">Pusat Informasi Siswa Kelas 7, 8, dan 9 | Tahun Ajaran 2026-2027</p>
               </div>
             </div>
             <div class="text-right">
@@ -1058,14 +1116,14 @@
           <div class="mt-12 grid grid-cols-2 text-xs">
             <div>
               <p>Mengetahui,</p>
-              <p class="font-bold mt-1">Kepala Sekolah</p>
+              <p class="font-bold mt-1">Kepala Sekolah SMP Kr. MDC</p>
               <br><br><br>
               <p class="font-bold underline">Drs. H. Mulyono, M.Pd</p>
               <p class="text-slate-400">NIPY. 197410212002121001</p>
             </div>
             <div class="text-right">
               <p>Surabaya, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              <p class="font-bold mt-1">Koordinator Tunas Bangsa</p>
+              <p class="font-bold mt-1">Koordinator Tata Usaha</p>
               <br><br><br>
               <p class="font-bold underline">Anisa Fitria, S.Pd</p>
               <p class="text-slate-400">NIPY. 198503142010122003</p>
@@ -1078,6 +1136,7 @@
       document.getElementById('print-full-page').innerHTML = reportHtml;
     }
 
+    // Pemicu cetak
     function printReport() {
       const content = document.getElementById('print-full-page').innerHTML;
       if (!content || content.includes("menyusun bagan")) {
