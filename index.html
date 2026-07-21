@@ -67,7 +67,7 @@
         </div>
       </div>
       
-      <!-- Navigasi Utama -->
+      <!-- Navigasi Utama (Tanpa Menu Pengaturan) -->
       <nav class="flex space-x-1 bg-indigo-950 p-1 rounded-xl">
         <button onclick="switchTab('scan')" id="btn-tab-scan" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-indigo-700 text-white">
           <i class="fa-solid fa-qrcode mr-2"></i>Scan Barcode
@@ -81,17 +81,14 @@
         <button onclick="switchTab('laporan')" id="btn-tab-laporan" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-indigo-200 hover:text-white transition">
           <i class="fa-solid fa-file-invoice mr-2"></i>Laporan Bulanan
         </button>
-        <button onclick="switchTab('settings')" id="btn-tab-settings" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-indigo-200 hover:text-white transition">
-          <i class="fa-solid fa-gears mr-2"></i>Pengaturan
-        </button>
       </nav>
     </div>
   </header>
 
   <!-- NOTIFIKASI KONEKSI (no-print) -->
-  <div id="conn-banner" class="bg-amber-500 text-white text-center py-1 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2">
-    <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
-    <span>Menggunakan Mode Demo (Offline). Hubungkan Google Sheets di tab Pengaturan untuk sinkronisasi cloud.</span>
+  <div id="conn-banner" class="bg-slate-500 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2">
+    <i class="fa-solid fa-circle-notch animate-spin"></i>
+    <span id="conn-banner-text">Mengecek koneksi ke database Google Sheets...</span>
   </div>
 
   <!-- MAIN CONTAINER -->
@@ -267,7 +264,7 @@
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
             </div>
             <button onclick="syncSiswa()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 flex-shrink-0">
-              <i class="fa-solid fa-arrows-rotate"></i>Sinkron Cloud
+              <i class="fa-solid fa-arrows-rotate animate-spin-slow"></i>Sinkron Cloud
             </button>
           </div>
         </div>
@@ -354,7 +351,14 @@
             <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">Filter Kelas</label>
             <select id="report-class-select" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="Semua">Semua Kelas</option>
-              <!-- Diisi secara dinamis melalui data siswa -->
+              <option value="7A">Kelas 7A</option>
+              <option value="7B">Kelas 7B</option>
+              <option value="8A">Kelas 8A</option>
+              <option value="8B">Kelas 8B</option>
+              <option value="8C">Kelas 8C</option>
+              <option value="9A">Kelas 9A</option>
+              <option value="9B">Kelas 9B</option>
+              <option value="9C">Kelas 9C</option>
             </select>
           </div>
           <div>
@@ -392,54 +396,13 @@
         </div>
 
         <!-- Pratinjau Kertas -->
-        <div class="border border-slate-200 rounded-xl bg-slate-100 p-4 max-h-[500px] overflow-y-auto shadow-inner">
+        <div class="border border-slate-200 rounded-xl bg-slate-100 p-4 max-h-[600px] overflow-y-auto shadow-inner">
           <p class="text-xs text-slate-400 mb-2 italic"><i class="fa-solid fa-eye mr-1"></i>Pratinjau Halaman Cetak Laporan</p>
           <div class="bg-white p-8 rounded shadow-sm border border-slate-200" id="report-preview-container">
             <div class="text-center py-12 text-slate-400">
               <i class="fa-solid fa-file-invoice text-4xl mb-3 block text-slate-300"></i>
               Klik tombol "Proses" untuk menyusun bagan kehadiran siswa.
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================== -->
-    <!-- TAB 5: PENGATURAN & INTEGRASI -->
-    <!-- ============================================== -->
-    <section id="tab-settings" class="tab-content hidden">
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto">
-        <h2 class="text-lg font-bold text-slate-800 mb-2">Penyelarasan Google Sheets</h2>
-        <p class="text-xs text-slate-500 mb-6">Hubungkan aplikasi absensi ini dengan file Google Sheets Anda untuk mengunggah riwayat scan.</p>
-
-        <div class="space-y-4">
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-slate-600 uppercase">Google Apps Script Web App URL</label>
-            <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" 
-              class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-            <p class="text-[11px] text-slate-400">
-              Masukkan tautan rilis Web App hasil deployment Google Apps Script Anda.
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <label class="block text-xs font-bold text-slate-600 uppercase">Simulasi Offline / Mode Demo</label>
-            <div class="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <input type="checkbox" id="offline-mode-chk" onchange="toggleOfflineMode()" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
-              <div>
-                <span class="text-sm font-semibold text-slate-700 block">Gunakan Data Contoh Riil (MDC)</span>
-                <span class="text-[11px] text-slate-400">Memuat data demo siswa riil Kelas 7, 8, dan 9 dari database sekolah tanpa koneksi online.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="pt-4 flex gap-3">
-            <button onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2">
-              <i class="fa-solid fa-floppy-disk"></i>Simpan Setelan
-            </button>
-            <button onclick="testConnection()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2">
-              <i class="fa-solid fa-circle-nodes"></i>Tes Koneksi
-            </button>
           </div>
         </div>
       </div>
@@ -474,9 +437,10 @@
   </div>
 
   <script>
-    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwvInY3cBeM-R66gxWoBoJTfDshbMXnWflvspqOOq44UWzfH9DQ0nEsfvPPhYSLrCa_0A/exec";
+    // URL Google Apps Script yang ditanamkan secara mutlak (Hardcoded)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwvInY3cBeM-R66gxWoBoJTfDshbMXnWflvspqOOq44UWzfH9DQ0nEsfvPPhYSLrCa_0A/exec";
     
-    // --- CONTOH DATA SISWA RIIL KELAS 7, 8, 9 DARI DATA NIY.XLSX (SMP KR. MDC) ---
+    // --- DATA SISWA CADANGAN (OFFLINE DATASET) ---
     const demoStudents = [
       // KELAS 7
       { niy: "134202601068", nama: "ADRIELLE BERNADETTE WANG", kelas: "7A", foto: "" },
@@ -510,21 +474,20 @@
     ];
 
     const demoLogs = [
-      { waktu: "2026-07-15T07:05:12", niy: "124202400969", nama: "ALISON OLIVIA OEN", kelas: "9C", status: "Hadir" },
-      { waktu: "2026-07-15T07:11:34", niy: "114202501014", nama: "AARON CHONG", kelas: "8C", status: "Hadir" },
-      { waktu: "2026-07-15T07:18:44", niy: "134202601068", nama: "ADRIELLE BERNADETTE WANG", kelas: "7A", status: "Hadir" }
+      { waktu: "2026-07-21T07:05:12", niy: "124202400969", nama: "ALISON OLIVIA OEN", kelas: "9C", status: "Hadir" },
+      { waktu: "2026-07-21T07:11:34", niy: "114202501014", nama: "AARON CHONG", kelas: "8C", status: "Hadir" },
+      { waktu: "2026-07-21T07:18:44", niy: "134202601068", nama: "ADRIELLE BERNADETTE WANG", kelas: "7A", status: "Hadir" }
     ];
 
     // --- STATE MANAGEMENT ---
     let appState = {
-      gasUrl: localStorage.getItem('gas_absensi_url') || '',
-      isOffline: localStorage.getItem('gas_absensi_offline') !== 'false',
+      isOffline: true, // Berubah setelah tes konektivitas
       students: [],
       logs: [],
       statusPreset: 'Hadir',
       todayScanCount: 0,
       recentScans: [],
-      isCameraActive: false // Status keaktifan scanner kamera
+      isCameraActive: false
     };
 
     // --- CAMERA ENGINE VARIABLES ---
@@ -532,27 +495,7 @@
     let lastScannedCode = "";
     let lastScannedTime = 0;
 
-    // --- UTILITY FUNCTIONS ---
-    function getDirectPhotoUrl(url) {
-      if (!url) return '';
-      if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
-        let fileId = '';
-        const matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        const matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-        
-        if (matchD && matchD[1]) {
-          fileId = matchD[1];
-        } else if (matchId && matchId[1]) {
-          fileId = matchId[1];
-        }
-        
-        if (fileId) {
-          return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-        }
-      }
-      return url;
-    }
-
+    // --- PLAY SOUND BEEP SYSTEM ---
     let audioCtx = null;
     function playBeep(success = true) {
       try {
@@ -574,811 +517,644 @@
           osc.stop(audioCtx.currentTime + 0.28);
         }
       } catch (e) {
-        console.warn("Audio Context tidak dapat dijalankan.", e);
+        console.warn("Audio Context tidak diizinkan oleh kebijakan browser: ", e);
       }
     }
 
-    // --- INITIALIZATION ---
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gas-url').value = appState.gasUrl;
-      document.getElementById('offline-mode-chk').checked = appState.isOffline;
-      
-      updateConnectionBanner();
-      loadData();
-      focusBarcodeField();
-      
-      const barInput = document.getElementById('barcode-input');
-      barInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          processBarcode(barInput.value.trim());
-          barInput.value = '';
-        }
-      });
+    // --- VIEW / TAB SWITCHER ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
-      document.addEventListener('click', (e) => {
-        const isScanTabActive = !document.getElementById('tab-scan').classList.contains('hidden');
-        // Hanya arahkan fokus otomatis jika tidak sedang menggunakan kamera HP
-        if (isScanTabActive && !appState.isCameraActive && e.target.id !== 'barcode-input' && !e.target.closest('button') && !e.target.closest('input')) {
-          focusBarcodeField();
-        }
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-700', 'text-white');
+        btn.classList.add('text-indigo-200', 'hover:text-white');
       });
-    });
+      document.getElementById(`btn-tab-${tabId}`).classList.add('bg-indigo-700', 'text-white');
+      document.getElementById(`btn-tab-${tabId}`).classList.remove('text-indigo-200', 'hover:text-white');
 
+      // Fokuskan kembali field input jika kembali ke tab scan
+      if (tabId === 'scan') {
+        setTimeout(focusBarcodeField, 200);
+      } else {
+        stopCameraScanner();
+      }
+    }
+
+    // --- FORM FIELD FOCUSER ---
     function focusBarcodeField() {
-      const input = document.getElementById('barcode-input');
-      if (input) input.focus();
-    }
-
-    function updateConnectionBanner() {
-      const banner = document.getElementById('conn-banner');
-      if (appState.isOffline) {
-        banner.className = "bg-amber-500 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
-        banner.querySelector('span').innerText = "Menggunakan Mode Demo (Offline). Hubungkan Google Sheets di tab Pengaturan untuk sinkronisasi Data Kelas.";
-      } else {
-        if (appState.gasUrl) {
-          banner.className = "bg-emerald-600 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
-          banner.querySelector('span').innerText = "Sistem Online! Terhubung dengan database cloud Google Sheets.";
-        } else {
-          banner.className = "bg-rose-500 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
-          banner.querySelector('span').innerText = "Belum Terkoneksi! Masukkan URL Google Apps Script Anda di Pengaturan.";
-        }
+      const field = document.getElementById('barcode-input');
+      if (field) {
+        field.focus();
       }
     }
 
-    // --- LOAD DATA ---
-    async function loadData() {
-      if (appState.isOffline || !appState.gasUrl) {
-        appState.students = [...demoStudents];
-        appState.logs = [...demoLogs];
-        processInitialStates();
-      } else {
-        await syncSiswa();
-        await syncLogs();
+    // --- LOAD DATA & CONNECTIONS ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Inisialisasi awal dataset
+      appState.students = JSON.parse(localStorage.getItem('absensi_siswa')) || demoStudents;
+      appState.logs = JSON.parse(localStorage.getItem('absensi_logs')) || demoLogs;
+      
+      // Integrasikan event listener field input barcode
+      const barcodeInput = document.getElementById('barcode-input');
+      if (barcodeInput) {
+        barcodeInput.focus();
+        barcodeInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const rawVal = barcodeInput.value.trim();
+            if (rawVal) {
+              processBarcodeScan(rawVal);
+            }
+            barcodeInput.value = '';
+          }
+        });
+        
+        // Jaga agar input tetap fokus sewaktu diklik di luar form input
+        document.addEventListener('click', (e) => {
+          const activeTab = document.querySelector('.tab-content:not(.hidden)');
+          if (activeTab && activeTab.id === 'tab-scan') {
+            const path = e.composedPath();
+            const isButtonOrInput = path.some(el => el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'A' || el.tagName === 'SELECT');
+            if (!isButtonOrInput) {
+              focusBarcodeField();
+            }
+          }
+        });
       }
-    }
 
-    function processInitialStates() {
-      populateClasses();
+      // Verifikasi koneksi Google Drive / Apps Script
+      await testSheetsConnection();
       renderSiswaTable();
       renderLogsTable();
-      updateTodayStats();
-    }
+      updateDashboardStats();
+    });
 
-    function populateClasses() {
-      const classSelect = document.getElementById('report-class-select');
-      const uniqueClasses = [...new Set(appState.students.map(s => s.kelas))].sort();
+    // --- VERIFIKASI KONEKSI GOOGLE SHEET ---
+    async function testSheetsConnection() {
+      const banner = document.getElementById('conn-banner');
+      const text = document.getElementById('conn-banner-text');
       
-      const currentSelected = classSelect.value;
-      classSelect.innerHTML = '<option value="Semua">Semua Kelas</option>';
-      
-      uniqueClasses.forEach(cls => {
-        const opt = document.createElement('option');
-        opt.value = cls;
-        opt.innerText = `Kelas ${cls}`;
-        classSelect.appendChild(opt);
-      });
-
-      if (uniqueClasses.includes(currentSelected)) {
-        classSelect.value = currentSelected;
+      try {
+        const res = await fetch(`${GAS_URL}?action=getStudents`, { method: "GET" });
+        if (res.ok) {
+          const data = await res.json();
+          appState.isOffline = false;
+          if (data && data.length > 0) {
+            appState.students = data;
+            localStorage.setItem('absensi_siswa', JSON.stringify(appState.students));
+          }
+          
+          // Sukses terkoneksi
+          banner.className = "bg-emerald-600 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
+          text.innerHTML = '<i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Mode Cloud Aktif (Terkoneksi dengan Database Google Sheets)';
+          
+          // Tarik data log terbaru
+          await syncLogs();
+        } else {
+          throw new Error("Respon API gagal");
+        }
+      } catch (err) {
+        console.warn("Gagal terhubung ke Cloud, menjalankan mode offline:", err);
+        appState.isOffline = true;
+        
+        // Mode offline
+        banner.className = "bg-amber-500 text-white text-center py-1.5 px-4 text-xs font-semibold shadow-inner no-print flex items-center justify-center gap-2";
+        text.innerHTML = '<i class="fa-solid fa-triangle-exclamation animate-bounce"></i> Menjalankan Mode Offline Lokal. Data akan dicatat di browser terlebih dahulu.';
       }
     }
 
-    // Hitung log presensi hari ini
-    function updateTodayStats() {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const todayLogs = appState.logs.filter(log => {
-        const logDate = new Date(log.waktu).toISOString().split('T')[0];
-        return logDate === todayStr;
-      });
-
-      appState.todayScanCount = todayLogs.length;
-      document.getElementById('total-scans-today').innerText = `Hari ini: ${appState.todayScanCount} siswa`;
-      document.getElementById('scan-count').innerText = appState.todayScanCount;
-    }
-
-    // --- SINKRONISASI API ---
+    // --- SINKRONISASI DATA SISWA ---
     async function syncSiswa() {
-      if (!appState.gasUrl) return;
-      
-      const tbody = document.getElementById('siswa-table-body');
-      tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin text-2xl mb-2 block text-indigo-500"></i>Sinkronisasi database murid...</td></tr>`;
-
+      showModal("Mengunduh...", "Sedang menyelaraskan data siswa dari Google Drive...", "fa-solid fa-spinner animate-spin text-indigo-500");
       try {
-        const response = await fetch(`${appState.gasUrl}?action=getStudents`);
-        if (!response.ok) throw new Error("Gagal menerima respon dari server.");
-        const data = await response.json();
-        
-        appState.students = data;
-        renderSiswaTable();
-        populateClasses();
-      } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2 block"></i>Koneksi bermasalah: ${err.message}. Memuat data demo lokal.</td></tr>`;
-        appState.students = [...demoStudents];
-        renderSiswaTable();
-        populateClasses();
-      }
-    }
-
-    async function syncLogs() {
-      if (!appState.gasUrl) return;
-
-      const tbody = document.getElementById('logs-table-body');
-      tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin text-2xl mb-2 block text-indigo-500"></i>Memuat riwayat kehadiran terbaru...</td></tr>`;
-
-      try {
-        const response = await fetch(`${appState.gasUrl}?action=getLogs`);
-        if (!response.ok) throw new Error("Koneksi gagal.");
-        const data = await response.json();
-        
-        appState.logs = data;
-        renderLogsTable();
-        updateTodayStats();
-      } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2 block"></i>Log tidak dapat dimuat. Memuat data cadangan.</td></tr>`;
-        appState.logs = [...demoLogs];
-        renderLogsTable();
-        updateTodayStats();
-      }
-    }
-
-    // --- TOGGLE CAMERA SCANNER ---
-    async function toggleCameraScanner() {
-      const cameraContainer = document.getElementById('camera-scanner-container');
-      const staticContainer = document.getElementById('static-scanner-container');
-      const btnToggle = document.getElementById('btn-toggle-camera');
-
-      if (!appState.isCameraActive) {
-        // Aktifkan Kamera HP
-        staticContainer.classList.add('hidden');
-        cameraContainer.classList.remove('hidden');
-        btnToggle.innerHTML = '<i class="fa-solid fa-keyboard text-sm"></i> Gunakan Scanner Laser';
-        btnToggle.className = "w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5";
-        appState.isCameraActive = true;
-        startCameraScanner();
-      } else {
-        // Nonaktifkan Kamera HP
-        stopCameraScanner();
-        cameraContainer.classList.add('hidden');
-        staticContainer.classList.remove('hidden');
-        btnToggle.innerHTML = '<i class="fa-solid fa-camera text-sm"></i> Aktifkan Kamera HP';
-        btnToggle.className = "w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5";
-        appState.isCameraActive = false;
-        focusBarcodeField();
-      }
-    }
-
-    function startCameraScanner() {
-      // Inisialisasi library HTML5 QR Code di dalam div #reader
-      html5QrCode = new Html5Qrcode("reader");
-      
-      // Konfigurasi agar optimal membaca barcode 1D (persegi panjang)
-      const config = { 
-        fps: 15, 
-        qrbox: function(width, height) {
-          // Sesuaikan kotak deteksi barcode agar melebar menyamping
-          return { width: Math.min(width * 0.85, 280), height: 140 };
-        }
-      };
-
-      // Memulai kamera belakang ponsel (facingMode: environment)
-      html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText, decodedResult) => {
-          const now = Date.now();
-          // Blokir scan berulang untuk kartu yang sama dalam jeda 3 detik
-          if (decodedText === lastScannedCode && (now - lastScannedTime < 3000)) {
-            return;
-          }
-          lastScannedCode = decodedText;
-          lastScannedTime = now;
-          
-          processBarcode(decodedText);
-        },
-        (errorMessage) => {
-          // Callback debug diabaikan agar tidak mengganggu performance loop scan
-        }
-      ).catch(err => {
-        console.error("Gagal menjalankan kamera HP: ", err);
-        showModal("Gagal Mengakses Kamera", "Browser Anda memblokir izin akses kamera atau kamera sedang digunakan oleh aplikasi lain.", "danger");
-        // Kembalikan ke mode statis
-        appState.isCameraActive = true;
-        toggleCameraScanner();
-      });
-    }
-
-    function stopCameraScanner() {
-      if (html5QrCode) {
-        if (html5QrCode.isScanning) {
-          html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-            html5QrCode = null;
-          }).catch(err => console.error("Gagal menonaktifkan kamera: ", err));
-        } else {
-          html5QrCode = null;
-        }
-      }
-    }
-
-    // --- PROSES SCAN BARCODE ---
-    async function processBarcode(barcode) {
-      if (!barcode) return;
-
-      // Cari berdasarkan NIY
-      const siswa = appState.students.find(s => s.niy === barcode);
-
-      if (!siswa) {
-        playBeep(false);
-        showScanResultFail(barcode);
-        return;
-      }
-
-      playBeep(true);
-      
-      const checkinTime = new Date();
-      const formatTime = checkinTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      
-      showScanResultSuccess(siswa, formatTime, appState.statusPreset);
-
-      const logData = {
-        waktu: checkinTime.toISOString(),
-        niy: siswa.niy,
-        nama: siswa.nama,
-        kelas: siswa.kelas,
-        status: appState.statusPreset
-      };
-
-      if (appState.isOffline || !appState.gasUrl) {
-        appState.logs.unshift(logData);
-        updateStateAfterScan(logData);
-      } else {
-        showCheckingInIndicator(true);
-        try {
-          const apiQueryUrl = `${appState.gasUrl}?action=addLog&niy=${encodeURIComponent(siswa.niy)}&status=${encodeURIComponent(appState.statusPreset)}`;
-          const response = await fetch(apiQueryUrl);
-          const result = await response.json();
-          
-          if (result.status === "success") {
-            logData.waktu = result.waktu || logData.waktu;
-            appState.logs.unshift(logData);
-            updateStateAfterScan(logData);
+        const res = await fetch(`${GAS_URL}?action=getStudents`, { method: "GET" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            appState.students = data;
+            localStorage.setItem('absensi_siswa', JSON.stringify(appState.students));
+            renderSiswaTable();
+            closeModal();
+            showModal("Sukses", "Data siswa berhasil diperbarui dari Google Sheets!", "fa-solid fa-circle-check text-emerald-500");
           } else {
-            throw new Error(result.message || "Gagal merekam presensi ke Sheets.");
+            throw new Error("Dataset kosong");
           }
-        } catch (e) {
-          console.error(e);
-          showModal("Penyimpanan Sementara", "Gagal mengirim data ke cloud. Kehadiran dicatat secara lokal sementara: " + e.message, "warning");
-          appState.logs.unshift(logData);
-          updateStateAfterScan(logData);
-        } finally {
-          showCheckingInIndicator(false);
-        }
-      }
-    }
-
-    function updateStateAfterScan(logData) {
-      addRecentScanUI(logData);
-      renderLogsTable();
-      updateTodayStats();
-    }
-
-    function showScanResultSuccess(siswa, timeStr, status) {
-      const card = document.getElementById('student-card');
-      const img = document.getElementById('student-photo');
-      const placeholder = document.getElementById('photo-placeholder');
-      const niyBadge = document.getElementById('student-niy-badge');
-      const statusBadge = document.getElementById('student-status-badge');
-      const nameText = document.getElementById('student-name');
-      const classText = document.getElementById('student-class');
-      const checkinInfo = document.getElementById('checkin-info');
-      const checkinTime = document.getElementById('checkin-time');
-      const checkinIconBox = document.getElementById('checkin-icon-box');
-
-      card.className = "bg-white rounded-2xl shadow-lg border-2 border-emerald-500 p-8 flex flex-col md:flex-row gap-6 items-center md:items-start min-h-[320px] transition-all duration-300 relative overflow-hidden";
-      document.getElementById('card-decor-bg').className = "absolute -right-10 -bottom-10 opacity-10 pointer-events-none transition-all duration-500 text-emerald-500";
-
-      if (siswa.foto) {
-        const convertedUrl = getDirectPhotoUrl(siswa.foto);
-        img.src = convertedUrl;
-        img.onload = () => {
-          img.classList.remove('hidden');
-          placeholder.classList.add('hidden');
-        };
-        // Fallback jika konversi gagal / file tidak diset publik
-        img.onerror = () => {
-          img.classList.add('hidden');
-          placeholder.classList.remove('hidden');
-          placeholder.innerHTML = '<i class="fa-solid fa-user-lock text-7xl text-slate-300"></i><span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mt-2">Akses Terkunci</span>';
-          console.warn("Gagal memuat foto dari Google Drive. Pastikan pengaturan berbagi file diset 'Siapa saja yang memiliki link'.");
-        };
-      } else {
-        img.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        placeholder.innerHTML = '<i class="fa-solid fa-user-tie text-7xl"></i><span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mt-2">Menunggu Kartu</span>';
-      }
-
-      niyBadge.innerText = `NIY: ${siswa.niy}`;
-      niyBadge.className = "px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-md font-mono text-xs font-semibold tracking-wider";
-      
-      statusBadge.innerText = status.toUpperCase();
-      statusBadge.className = `px-3 py-1 text-white rounded-full text-xs font-bold uppercase tracking-wider ${
-        status === 'Hadir' ? 'bg-emerald-500' : status === 'Izin' ? 'bg-amber-500' : 'bg-rose-500'
-      }`;
-
-      nameText.innerText = siswa.nama;
-      classText.innerText = `Siswa Kelas ${siswa.kelas}`;
-
-      checkinInfo.className = "mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100 opacity-100 transition duration-300 w-full";
-      checkinTime.innerText = `${timeStr} (Perekaman Berhasil)`;
-      checkinIconBox.className = "p-2.5 rounded-full bg-emerald-500 text-white";
-      checkinIconBox.innerHTML = '<i class="fa-solid fa-circle-check text-lg"></i>';
-    }
-
-    function showScanResultFail(barcode) {
-      const card = document.getElementById('student-card');
-      const img = document.getElementById('student-photo');
-      const placeholder = document.getElementById('photo-placeholder');
-      const niyBadge = document.getElementById('student-niy-badge');
-      const statusBadge = document.getElementById('student-status-badge');
-      const nameText = document.getElementById('student-name');
-      const classText = document.getElementById('student-class');
-      const checkinInfo = document.getElementById('checkin-info');
-      const checkinTime = document.getElementById('checkin-time');
-      const checkinIconBox = document.getElementById('checkin-icon-box');
-
-      card.className = "bg-white rounded-2xl shadow-lg border-2 border-red-500 p-8 flex flex-col md:flex-row gap-6 items-center md:items-start min-h-[320px] transition-all duration-300 relative overflow-hidden";
-      document.getElementById('card-decor-bg').className = "absolute -right-10 -bottom-10 opacity-10 pointer-events-none transition-all duration-500 text-red-500";
-
-      img.classList.add('hidden');
-      placeholder.classList.remove('hidden');
-      placeholder.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-7xl text-red-400"></i><span class="text-[10px] font-bold tracking-wider uppercase text-red-500 mt-2">Error</span>';
-
-      niyBadge.innerText = `NIY: ${barcode}`;
-      niyBadge.className = "px-2.5 py-1 bg-red-100 text-red-800 rounded-md font-mono text-xs font-semibold tracking-wider";
-
-      statusBadge.innerText = "TIDAK DIKENAL";
-      statusBadge.className = "px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold uppercase tracking-wider";
-
-      nameText.innerText = "Kartu Tidak Terdaftar";
-      classText.innerText = "Nomor NIY kartu pintar ini belum masuk database.";
-
-      checkinInfo.className = "mt-6 p-4 bg-red-50 rounded-xl border border-red-100 opacity-100 transition duration-300 w-full";
-      checkinTime.innerText = "Gagal memproses absensi";
-      checkinIconBox.className = "p-2.5 rounded-full bg-red-500 text-white";
-      checkinIconBox.innerHTML = '<i class="fa-solid fa-circle-xmark text-lg"></i>';
-    }
-
-    function showCheckingInIndicator(isActive) {
-      const input = document.getElementById('barcode-input');
-      const badge = document.getElementById('scan-status-badge');
-      if (isActive) {
-        input.disabled = true;
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>Sinkronisasi Database...`;
-        badge.className = "px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold flex items-center gap-1.5";
-      } else {
-        input.disabled = false;
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>Siap Men-Scan Kartu`;
-        badge.className = "px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold flex items-center gap-1.5";
-        if (!appState.isCameraActive) {
-          focusBarcodeField();
-        }
-      }
-    }
-
-    function clearScanState() {
-      const card = document.getElementById('student-card');
-      const img = document.getElementById('student-photo');
-      const placeholder = document.getElementById('photo-placeholder');
-      const niyBadge = document.getElementById('student-niy-badge');
-      const statusBadge = document.getElementById('student-status-badge');
-      const nameText = document.getElementById('student-name');
-      const classText = document.getElementById('student-class');
-      const checkinInfo = document.getElementById('checkin-info');
-
-      card.className = "bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col md:flex-row gap-6 items-center md:items-start min-h-[320px] transition-all duration-300 relative overflow-hidden";
-      document.getElementById('card-decor-bg').className = "absolute -right-10 -bottom-10 opacity-5 pointer-events-none transition-all duration-500";
-      
-      img.classList.add('hidden');
-      placeholder.classList.remove('hidden');
-      placeholder.innerHTML = '<i class="fa-solid fa-user-tie text-7xl"></i><span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mt-2">Menunggu Kartu</span>';
-
-      niyBadge.innerText = "NIY: -";
-      niyBadge.className = "px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md font-mono text-xs font-semibold tracking-wider";
-
-      statusBadge.innerText = "BELUM TERSCAN";
-      statusBadge.className = "px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold uppercase tracking-wider";
-
-      nameText.innerText = "Selamat Datang!";
-      classText.innerText = "Silakan tempelkan kartu pintar atau barcode siswa Anda.";
-
-      checkinInfo.className = "mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100 opacity-50 w-full";
-      document.getElementById('checkin-time').innerText = "-- : -- : --";
-      document.getElementById('checkin-icon-box').innerHTML = '<i class="fa-solid fa-circle-info text-lg"></i>';
-      document.getElementById('checkin-icon-box').className = "p-2.5 rounded-full bg-slate-200 text-slate-600";
-    }
-
-    function addRecentScanUI(log) {
-      const container = document.getElementById('recent-scans-list');
-      
-      if (container.querySelector('.fa-ban')) {
-        container.innerHTML = '';
-      }
-
-      const logTime = new Date(log.waktu);
-      const timeStr = logTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-      const item = document.createElement('div');
-      item.className = "flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-xs transition duration-150";
-      
-      let badgeClass = "bg-emerald-100 text-emerald-800";
-      if (log.status === "Izin") badgeClass = "bg-amber-100 text-amber-800";
-      if (log.status === "Sakit") badgeClass = "bg-rose-100 text-rose-800";
-
-      item.innerHTML = `
-        <div class="flex items-center space-x-3">
-          <span class="font-bold text-slate-400 font-mono">${timeStr}</span>
-          <div>
-            <span class="font-bold text-slate-800 block text-ellipsis overflow-hidden max-w-[200px] whitespace-nowrap">${log.nama}</span>
-            <span class="text-[10px] text-slate-500">Kelas ${log.kelas} - NIY: ${log.niy}</span>
-          </div>
-        </div>
-        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}">${log.status.toUpperCase()}</span>
-      `;
-
-      container.insertBefore(item, container.firstChild);
-
-      if (container.children.length > 5) {
-        container.removeChild(container.lastChild);
-      }
-    }
-
-    function updateStatusPreset(newStatus) {
-      appState.statusPreset = newStatus;
-      
-      const presetIds = {
-        'Hadir': 'lbl-status-hadir',
-        'Izin': 'lbl-status-izin',
-        'Sakit': 'lbl-status-sakit'
-      };
-
-      const presetColors = {
-        'Hadir': 'border-emerald-500 bg-emerald-50 text-emerald-800',
-        'Izin': 'border-amber-500 bg-amber-50 text-amber-800',
-        'Sakit': 'border-rose-500 bg-rose-50 text-rose-800'
-      };
-
-      Object.keys(presetIds).forEach(status => {
-        const el = document.getElementById(presetIds[status]);
-        if (status === newStatus) {
-          el.className = `border-2 p-3 flex flex-col items-center justify-center cursor-pointer hover:shadow-sm transition rounded-xl ${presetColors[status]}`;
         } else {
-          el.className = "border-2 border-slate-200 text-slate-600 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition";
+          throw new Error();
         }
-      });
-      
-      if (!appState.isCameraActive) {
-        focusBarcodeField();
+      } catch (err) {
+        closeModal();
+        showModal("Gagal", "Tidak dapat terhubung ke Google Drive. Cek koneksi internet Anda.", "fa-solid fa-circle-xmark text-red-500");
       }
     }
 
-    // --- RENDER TABEL DATA SISWA ---
-    function renderSiswaTable(dataToRender = appState.students) {
-      const tbody = document.getElementById('siswa-table-body');
+    // --- SINKRONISASI DATA LOGS ---
+    async function syncLogs() {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getLogs`, { method: "GET" });
+        if (res.ok) {
+          const data = await res.json();
+          appState.logs = data;
+          localStorage.setItem('absensi_logs', JSON.stringify(appState.logs));
+          renderLogsTable();
+          updateDashboardStats();
+        }
+      } catch (e) {
+        console.warn("Gagal mengambil log dari cloud.");
+      }
+    }
+
+    // --- PEMROSESAN BARCODE ---
+    function processBarcodeScan(code) {
+      // Hilangkan noise enter / spasi
+      const cleanedCode = code.replace(/[\n\r\t]/g, "").trim();
+      if (!cleanedCode) return;
+
+      const siswa = appState.students.find(s => s.niy === cleanedCode);
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+
+      if (siswa) {
+        // Mainkan nada berhasil
+        playBeep(true);
+
+        // Update tampilan kartu profil
+        document.getElementById('photo-placeholder').classList.add('hidden');
+        const img = document.getElementById('student-photo');
+        img.src = siswa.foto || `https://placehold.co/400x400/eceef5/4f46e5?text=${encodeURIComponent(siswa.nama)}`;
+        img.classList.remove('hidden');
+
+        document.getElementById('student-niy-badge').innerText = `NIY: ${siswa.niy}`;
+        
+        const statusBadge = document.getElementById('student-status-badge');
+        statusBadge.innerText = appState.statusPreset.toUpperCase();
+        
+        // Rubah warna badge status
+        if (appState.statusPreset === 'Hadir') {
+          statusBadge.className = "px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider";
+        } else if (appState.statusPreset === 'Izin') {
+          statusBadge.className = "px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold uppercase tracking-wider";
+        } else {
+          statusBadge.className = "px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wider";
+        }
+
+        document.getElementById('student-name').innerText = siswa.nama;
+        document.getElementById('student-class').innerText = `Murid Aktif - Kelas ${siswa.kelas}`;
+        
+        // Update check-in box
+        document.getElementById('checkin-info').className = "mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100 opacity-100 transition duration-300";
+        document.getElementById('checkin-icon-box').className = "p-2.5 rounded-full bg-emerald-500 text-white";
+        document.getElementById('checkin-icon-box').innerHTML = '<i class="fa-solid fa-circle-check text-lg"></i>';
+        document.getElementById('checkin-time').innerText = timeString;
+
+        // Tambah ke riwayat absen lokal
+        const newLog = {
+          waktu: now.toISOString(),
+          niy: siswa.niy,
+          nama: siswa.nama,
+          kelas: siswa.kelas,
+          status: appState.statusPreset
+        };
+
+        appState.logs.unshift(newLog);
+        localStorage.setItem('absensi_logs', JSON.stringify(appState.logs));
+
+        // Kirim data ke Cloud (Google Sheets) jika terhubung
+        if (!appState.isOffline) {
+          sendAttendanceToCloud(newLog);
+        }
+
+        updateDashboardStats();
+        renderLogsTable();
+      } else {
+        // Mainkan nada gagal
+        playBeep(false);
+        showModal("Gagal Mendeteksi", `Kode NIY "${cleanedCode}" tidak terdaftar dalam database siswa.`, "fa-solid fa-triangle-exclamation text-amber-500");
+      }
+    }
+
+    // --- KIRIM LOG KE GOOGLE SHEETS CLOUD ---
+    async function sendAttendanceToCloud(logData) {
+      try {
+        await fetch(GAS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "addLog",
+            waktu: logData.waktu,
+            niy: logData.niy,
+            nama: logData.nama,
+            kelas: logData.kelas,
+            status: logData.status
+          })
+        });
+      } catch (e) {
+        console.warn("Gagal mengirim data ke awan. Log tersimpan di offline cache browser.");
+      }
+    }
+
+    // --- UDPATE PRESET STATUS ABSENSI ---
+    function updateStatusPreset(status) {
+      appState.statusPreset = status;
+      // Atur dekorasi borders radio status
+      document.getElementById('lbl-status-hadir').className = status === 'Hadir' ? 'border-2 border-emerald-500 bg-emerald-50 text-emerald-800 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition' : 'border-2 border-slate-200 text-slate-600 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition';
+      document.getElementById('lbl-status-izin').className = status === 'Izin' ? 'border-2 border-blue-500 bg-blue-50 text-blue-800 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition' : 'border-2 border-slate-200 text-slate-600 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition';
+      document.getElementById('lbl-status-sakit').className = status === 'Sakit' ? 'border-2 border-amber-500 bg-amber-50 text-amber-800 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition' : 'border-2 border-slate-200 text-slate-600 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition';
+      focusBarcodeField();
+    }
+
+    // --- CLEAR/RESET SCAN STATE ---
+    function clearScanState() {
+      document.getElementById('student-photo').classList.add('hidden');
+      document.getElementById('photo-placeholder').classList.remove('hidden');
+      document.getElementById('student-niy-badge').innerText = 'NIY: -';
+      document.getElementById('student-status-badge').innerText = 'BELUM TERSCAN';
+      document.getElementById('student-status-badge').className = "px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold uppercase tracking-wider";
+      document.getElementById('student-name').innerText = 'Selamat Datang!';
+      document.getElementById('student-class').innerText = 'Silakan tempelkan kartu pintar atau barcode siswa Anda.';
+      document.getElementById('checkin-info').className = "mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100 opacity-50 transition duration-300";
+      document.getElementById('checkin-icon-box').className = "p-2.5 rounded-full bg-slate-200 text-slate-600";
+      document.getElementById('checkin-icon-box').innerHTML = '<i class="fa-solid fa-circle-info text-lg"></i>';
+      document.getElementById('checkin-time').innerText = '-- : -- : --';
+      focusBarcodeField();
+    }
+
+    // --- DASHBOARD UPDATER ---
+    function updateDashboardStats() {
+      const todayStr = new Date().toDateString();
       
-      if (dataToRender.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-face-frown text-2xl mb-2 block"></i>Murid tidak terdaftar</td></tr>`;
+      const logsToday = appState.logs.filter(log => {
+        return new Date(log.waktu).toDateString() === todayStr;
+      });
+
+      document.getElementById('scan-count').innerText = logsToday.length;
+      document.getElementById('total-scans-today').innerText = `Hari ini: ${logsToday.length} siswa`;
+
+      // Render recent activity list
+      const list = document.getElementById('recent-scans-list');
+      if (logsToday.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-xs">
+            <i class="fa-solid fa-ban text-2xl mb-2 block"></i>
+            Belum ada aktivitas perekaman absensi
+          </div>`;
         return;
       }
 
-      tbody.innerHTML = dataToRender.map(s => {
-        const convertedUrl = getDirectPhotoUrl(s.foto);
-        const imgTag = s.foto 
-          ? `<img src="${convertedUrl}" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400\\'><i class=\\'fa-solid fa-user-tie\\'></i></div>';" class="w-10 h-10 object-contain rounded-full border border-slate-200 shadow-sm bg-slate-50">` 
-          : `<div class="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-indigo-400"><i class="fa-solid fa-user-tie"></i></div>`;
+      list.innerHTML = logsToday.slice(0, 10).map(log => {
+        const jam = new Date(log.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        
+        let statusBadge = '';
+        if (log.status === 'Hadir') {
+          statusBadge = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">Hadir</span>`;
+        } else if (log.status === 'Izin') {
+          statusBadge = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full">Izin</span>`;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">Sakit</span>`;
+        }
+
         return `
-          <tr class="hover:bg-slate-50/70 transition">
-            <td class="p-4">${imgTag}</td>
-            <td class="p-4 font-mono font-semibold text-xs text-indigo-600">${s.niy}</td>
-            <td class="p-4 font-bold text-slate-800">${s.nama}</td>
-            <td class="p-4 text-xs font-semibold text-slate-500">Kelas ${s.kelas}</td>
-            <td class="p-4 text-center">
-              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-100">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Terdaftar
-              </span>
-            </td>
-          </tr>
-        `;
+          <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs hover:bg-slate-100 transition">
+            <div class="flex items-center space-x-2.5">
+              <span class="font-mono text-indigo-600 font-bold bg-white border border-slate-100 px-2 py-0.5 rounded-lg">${jam}</span>
+              <div>
+                <div class="font-bold text-slate-800 line-clamp-1">${log.nama}</div>
+                <div class="text-[10px] text-slate-400">Kelas ${log.kelas} • NIY: ${log.niy}</div>
+              </div>
+            </div>
+            ${statusBadge}
+          </div>`;
       }).join('');
     }
 
-    function filterSiswaTable() {
-      const query = document.getElementById('search-siswa').value.toLowerCase();
-      const filtered = appState.students.filter(s => 
-        s.nama.toLowerCase().includes(query) || s.niy.toLowerCase().includes(query) || s.kelas.toLowerCase().includes(query)
-      );
-      renderSiswaTable(filtered);
+    // --- TOGGLE CAMERA HP SCANNER ---
+    function toggleCameraScanner() {
+      const cameraBtn = document.getElementById('btn-toggle-camera');
+      const staticContainer = document.getElementById('static-scanner-container');
+      const cameraContainer = document.getElementById('camera-scanner-container');
+
+      if (appState.isCameraActive) {
+        stopCameraScanner();
+      } else {
+        appState.isCameraActive = true;
+        cameraBtn.innerHTML = '<i class="fa-solid fa-circle-stop text-sm"></i> Hentikan Kamera';
+        cameraBtn.className = "w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5";
+        
+        staticContainer.classList.add('hidden');
+        cameraContainer.classList.remove('hidden');
+
+        // Nyalakan library html5QrCode
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 15, qrbox: { width: 250, height: 150 } },
+          (decodedText) => {
+            const now = Date.now();
+            if (decodedText !== lastScannedCode || (now - lastScannedTime) > 3000) {
+              lastScannedCode = decodedText;
+              lastScannedTime = now;
+              processBarcodeScan(decodedText);
+            }
+          },
+          (errorMessage) => {}
+        ).catch(err => {
+          console.error("Gagal memulai kamera: ", err);
+          stopCameraScanner();
+          showModal("Gagal Memuat Kamera", "Izinkan akses kamera di pengaturan browser Anda.", "fa-solid fa-circle-xmark text-red-500");
+        });
+      }
+    }
+
+    // --- STOP CAMERA SCANNER ---
+    function stopCameraScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode = null;
+        }).catch(err => console.warn(err));
+      }
+
+      appState.isCameraActive = false;
+      const cameraBtn = document.getElementById('btn-toggle-camera');
+      if (cameraBtn) {
+        cameraBtn.innerHTML = '<i class="fa-solid fa-camera text-sm"></i> Aktifkan Kamera HP';
+        cameraBtn.className = "w-full bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5";
+      }
+
+      const staticContainer = document.getElementById('static-scanner-container');
+      const cameraContainer = document.getElementById('camera-scanner-container');
+      if (staticContainer) staticContainer.classList.remove('hidden');
+      if (cameraContainer) cameraContainer.classList.add('hidden');
+    }
+
+    // --- RENDER TABEL DATABASE SISWA ---
+    function renderSiswaTable() {
+      const body = document.getElementById('siswa-table-body');
+      if (!body) return;
+
+      body.innerHTML = appState.students.map(s => {
+        const fotoUrl = s.foto || `https://placehold.co/100x100/eceef5/4f46e5?text=${encodeURIComponent(s.nama)}`;
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="p-4">
+              <img src="${fotoUrl}" alt="Foto ${s.nama}" class="w-12 h-12 rounded-lg object-cover border border-slate-200">
+            </td>
+            <td class="p-4 font-mono font-bold text-xs text-indigo-900">${s.niy}</td>
+            <td class="p-4 font-semibold text-slate-700">${s.nama}</td>
+            <td class="p-4"><span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-md">${s.kelas}</span></td>
+            <td class="p-4 text-center">
+              <span class="inline-flex items-center gap-1 text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Aktif
+              </span>
+            </td>
+          </tr>`;
+      }).join('');
     }
 
     // --- RENDER TABEL LOGS ---
-    function renderLogsTable(dataToRender = appState.logs) {
-      const tbody = document.getElementById('logs-table-body');
+    function renderLogsTable() {
+      const body = document.getElementById('logs-table-body');
+      if (!body) return;
 
-      if (dataToRender.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400"><i class="fa-solid fa-clock text-2xl mb-2 block"></i>Log presensi kosong</td></tr>`;
+      if (appState.logs.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">Belum ada riwayat kehadiran</td></tr>';
         return;
       }
 
-      tbody.innerHTML = dataToRender.map(l => {
-        const dateObj = new Date(l.waktu);
-        const displayWaktu = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      body.innerHTML = appState.logs.map(log => {
+        const date = new Date(log.waktu).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        const time = new Date(log.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         
-        let statusColor = "bg-emerald-50 border-emerald-100 text-emerald-800";
-        if (l.status === "Izin") statusColor = "bg-amber-50 border-amber-100 text-amber-800";
-        if (l.status === "Sakit") statusColor = "bg-rose-50 border-rose-100 text-rose-800";
+        let statusBadge = '';
+        if (log.status === 'Hadir') {
+          statusBadge = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">Hadir</span>`;
+        } else if (log.status === 'Izin') {
+          statusBadge = `<span class="px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">Izin</span>`;
+        } else {
+          statusBadge = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">Sakit</span>`;
+        }
 
         return `
-          <tr class="hover:bg-slate-50/70 transition">
-            <td class="p-4 font-semibold text-xs text-slate-400">${displayWaktu}</td>
-            <td class="p-4 font-mono text-xs font-semibold text-indigo-600">${l.niy}</td>
-            <td class="p-4 font-bold text-slate-800">${l.nama}</td>
-            <td class="p-4 text-xs font-medium text-slate-500">Kelas ${l.kelas}</td>
-            <td class="p-4 text-center">
-              <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-md uppercase border ${statusColor}">
-                ${l.status}
-              </span>
-            </td>
-          </tr>
-        `;
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-xs">
+            <td class="p-4"><div class="font-bold text-slate-700">${date}</div><div class="text-[10px] text-slate-400">${time} WIB</div></td>
+            <td class="p-4 font-mono font-bold text-indigo-900">${log.niy}</td>
+            <td class="p-4 font-semibold text-slate-700">${log.nama}</td>
+            <td class="p-4"><span class="font-bold text-slate-500">${log.kelas}</span></td>
+            <td class="p-4 text-center">${statusBadge}</td>
+          </tr>`;
       }).join('');
     }
 
-    function filterLogsTable() {
-      const query = document.getElementById('search-log').value.toLowerCase();
-      const filtered = appState.logs.filter(l => 
-        l.nama.toLowerCase().includes(query) || l.niy.toLowerCase().includes(query) || l.kelas.toLowerCase().includes(query)
-      );
-      renderLogsTable(filtered);
+    // --- FITUR FILTER DATA SISWA ---
+    function filterSiswaTable() {
+      const q = document.getElementById('search-siswa').value.toLowerCase();
+      const rows = document.querySelectorAll('#siswa-table-body tr');
+      rows.forEach(row => {
+        const name = row.cells[2]?.innerText.toLowerCase();
+        const niy = row.cells[1]?.innerText.toLowerCase();
+        if (name?.includes(q) || niy?.includes(q)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
     }
 
-    // --- FORMULIR DAN CETAK LAPORAN ---
-    function generateReport() {
-      const targetClass = document.getElementById('report-class-select').value;
-      const targetMonth = parseInt(document.getElementById('report-month-select').value);
-      const targetYear = parseInt(document.getElementById('report-year-select').value);
-      
-      const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      
-      const filterSiswa = targetClass === "Semua" 
-        ? appState.students 
-        : appState.students.filter(s => s.kelas === targetClass);
+    // --- FITUR FILTER LOGS ---
+    function filterLogsTable() {
+      const q = document.getElementById('search-log').value.toLowerCase();
+      const rows = document.querySelectorAll('#logs-table-body tr');
+      rows.forEach(row => {
+        const name = row.cells[2]?.innerText.toLowerCase();
+        const niy = row.cells[1]?.innerText.toLowerCase();
+        const kelas = row.cells[3]?.innerText.toLowerCase();
+        if (name?.includes(q) || niy?.includes(q) || kelas?.includes(q)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
 
-      if (filterSiswa.length === 0) {
-        showModal("Laporan Kosong", "Tidak ada database murid kelas ini.", "warning");
+    // ==============================================
+    // REKAP & LAPORAN BULANAN (TAB 4 LOGICS)
+    // ==============================================
+    function generateReport() {
+      const classFilter = document.getElementById('report-class-select').value;
+      const monthSelect = parseInt(document.getElementById('report-month-select').value);
+      const yearSelect = parseInt(document.getElementById('report-year-select').value);
+      
+      const filteredStudents = appState.students.filter(s => classFilter === 'Semua' || s.kelas === classFilter);
+      const monthsName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      
+      // Ambil total hari dalam bulan itu
+      const totalDays = new Date(yearSelect, monthSelect, 0).getDate();
+      
+      // Hitung total hari kerja (Senin - Jumat) dalam sebulan
+      let workingDays = 0;
+      for (let day = 1; day <= totalDays; day++) {
+        const dateObj = new Date(yearSelect, monthSelect - 1, day);
+        const dayOfWeek = dateObj.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Lewati Sabtu & Minggu
+          workingDays++;
+        }
+      }
+
+      if (filteredStudents.length === 0) {
+        document.getElementById('report-preview-container').innerHTML = `
+          <div class="text-center py-12 text-slate-400">
+            <i class="fa-solid fa-file-invoice-dollar text-4xl mb-3 block text-slate-300"></i>
+            Tidak ada data murid terdaftar untuk kelas ${classFilter}
+          </div>`;
         return;
       }
 
+      // Bangun kerangka rekap
       let reportHtml = `
-        <div class="p-6 border border-slate-300">
-          <!-- KOP SURAT SEKOLAH -->
-          <div class="flex items-center justify-between border-b-4 border-slate-800 pb-4 mb-6">
-            <div class="flex items-center space-x-4">
-              <div class="w-14 h-14 bg-indigo-900 text-white rounded-full flex items-center justify-center text-3xl font-extrabold">M</div>
-              <div>
-                <h1 class="text-md font-black tracking-tight uppercase text-slate-900">SMP KRISTEN MDC</h1>
-                <p class="text-xs text-slate-500">Pusat Informasi Siswa Kelas 7, 8, dan 9 | Tahun Ajaran 2026-2027</p>
-              </div>
+        <div class="p-6 border border-slate-300 bg-white">
+          <!-- Kop Surat Sekolah -->
+          <div class="text-center border-b-4 border-slate-800 pb-4 mb-6">
+            <h1 class="text-xl font-extrabold text-slate-950 uppercase tracking-wide">SMP KRISTEN MDC SURABAYA</h1>
+            <p class="text-xs text-slate-500 font-semibold">Tebas Sari No. 1, Surabaya • Telp. (031) 5551234</p>
+            <p class="text-[11px] text-slate-400">Website: mdc.sch.id • Email: info@mdc.sch.id</p>
+          </div>
+
+          <!-- Informasi Laporan -->
+          <div class="flex justify-between items-end mb-6 text-xs">
+            <div>
+              <div class="font-bold text-indigo-900 text-sm">LAPORAN BULANAN REKAPITULASI PRESENSI</div>
+              <div class="text-slate-400">Bulan: <strong>${monthsName[monthSelect - 1]} ${yearSelect}</strong></div>
             </div>
             <div class="text-right">
-              <div class="text-xs font-bold text-slate-700">DOKUMEN ABSENSI</div>
-              <div class="text-xs text-slate-400">Verifikasi NIY</div>
+              <div>Kelas: <strong class="text-slate-700">${classFilter}</strong></div>
+              <div>Hari Kerja Efektif: <strong class="text-slate-700">${workingDays} Hari</strong></div>
             </div>
           </div>
 
-          <div class="text-center mb-6">
-            <h2 class="text-md font-bold tracking-wide uppercase text-slate-800">REKAPITULASI ABSENSI BULANAN SISWA (NIY)</h2>
-            <p class="text-xs text-slate-500">Masa Evaluasi: <strong class="text-slate-800">${namaBulan[targetMonth - 1]} ${targetYear}</strong> | Filter Kelas: <strong class="text-slate-800">${targetClass}</strong></p>
-          </div>
-
-          <table class="w-full text-left text-[11px] border-collapse border border-slate-300">
+          <!-- Tabel Rekapitulasi -->
+          <table class="w-full text-xs border-collapse border border-slate-400">
             <thead>
-              <tr class="bg-slate-100 border-b border-slate-300 text-slate-800 uppercase tracking-wider font-bold">
-                <th class="p-2.5 border border-slate-300 w-12 text-center">No</th>
-                <th class="p-2.5 border border-slate-300 w-24">NIY</th>
-                <th class="p-2.5 border border-slate-300">Nama Lengkap</th>
-                <th class="p-2.5 border border-slate-300 w-20">Kelas</th>
-                <th class="p-2.5 border border-slate-300 w-16 text-center text-emerald-700">Hadir</th>
-                <th class="p-2.5 border border-slate-300 w-16 text-center text-amber-700">Izin</th>
-                <th class="p-2.5 border border-slate-300 w-16 text-center text-rose-700">Sakit</th>
-                <th class="p-2.5 border border-slate-300 w-20 text-center">% Kehadiran</th>
+              <tr class="bg-slate-100 border-b border-slate-400 text-slate-700 font-bold">
+                <th class="border border-slate-400 p-2 text-center w-10">No</th>
+                <th class="border border-slate-400 p-2 text-center w-32">NIY</th>
+                <th class="border border-slate-400 p-2">Nama Murid</th>
+                <th class="border border-slate-400 p-2 text-center w-16">Kelas</th>
+                <th class="border border-slate-400 p-2 text-center w-12 bg-emerald-50 text-emerald-800">H</th>
+                <th class="border border-slate-400 p-2 text-center w-12 bg-blue-50 text-blue-800">I</th>
+                <th class="border border-slate-400 p-2 text-center w-12 bg-amber-50 text-amber-800">S</th>
+                <th class="border border-slate-400 p-2 text-center w-12 bg-red-50 text-red-800">A</th>
+                <th class="border border-slate-400 p-2 text-center w-20">Persen</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200">
-      `;
+            <tbody class="divide-y divide-slate-400">`;
 
-      let totalHariEfektif = 25;
+      filteredStudents.forEach((student, idx) => {
+        let H = 0;
+        let I = 0;
+        let S = 0;
 
-      filterSiswa.forEach((siswa, index) => {
-        const siswaLogs = appState.logs.filter(log => {
+        // Ambil log kehadiran siswa dalam bulan yang bersangkutan
+        const studentLogs = appState.logs.filter(log => {
+          if (log.niy !== student.niy) return false;
           const logDate = new Date(log.waktu);
-          return log.niy === siswa.niy && 
-                 (logDate.getMonth() + 1) === targetMonth && 
-                 logDate.getFullYear() === targetYear;
+          return (logDate.getMonth() + 1) === monthSelect && logDate.getFullYear() === yearSelect;
         });
 
-        const jmlHadir = siswaLogs.filter(l => l.status === "Hadir").length;
-        const jmlIzin = siswaLogs.filter(l => l.status === "Izin").length;
-        const jmlSakit = siswaLogs.filter(l => l.status === "Sakit").length;
-        const persentase = Math.round((jmlHadir / totalHariEfektif) * 100);
+        studentLogs.forEach(log => {
+          if (log.status === 'Hadir') H++;
+          else if (log.status === 'Izin') I++;
+          else if (log.status === 'Sakit') S++;
+        });
+
+        // Alpa = total hari kerja efektif - (Hadir + Izin + Sakit)
+        let A = workingDays - (H + I + S);
+        if (A < 0) A = 0; // Guard agar tidak bernilai minus
+
+        // Persentase Kehadiran = (Hadir / Hari Efektif) * 100
+        const percentage = workingDays > 0 ? ((H / workingDays) * 100).toFixed(1) : 0;
 
         reportHtml += `
-          <tr class="hover:bg-slate-50 transition text-slate-700">
-            <td class="p-2.5 border border-slate-300 text-center font-semibold">${index + 1}</td>
-            <td class="p-2.5 border border-slate-300 font-mono text-xs">${siswa.niy}</td>
-            <td class="p-2.5 border border-slate-300 font-bold">${siswa.nama}</td>
-            <td class="p-2.5 border border-slate-300">Kelas ${siswa.kelas}</td>
-            <td class="p-2.5 border border-slate-300 text-center font-semibold text-emerald-600">${jmlHadir}</td>
-            <td class="p-2.5 border border-slate-300 text-center font-semibold text-amber-600">${jmlIzin}</td>
-            <td class="p-2.5 border border-slate-300 text-center font-semibold text-rose-600">${jmlSakit}</td>
-            <td class="p-2.5 border border-slate-300 text-center font-bold text-slate-800">${persentase}%</td>
-          </tr>
-        `;
+          <tr class="hover:bg-slate-50">
+            <td class="border border-slate-400 p-2 text-center font-semibold text-slate-500">${idx + 1}</td>
+            <td class="border border-slate-400 p-2 font-mono text-center font-bold text-slate-700">${student.niy}</td>
+            <td class="border border-slate-400 p-2 font-semibold text-slate-800">${student.nama}</td>
+            <td class="border border-slate-400 p-2 text-center text-slate-600 font-bold">${student.kelas}</td>
+            <td class="border border-slate-400 p-2 text-center font-bold text-emerald-600 bg-emerald-50/50">${H}</td>
+            <td class="border border-slate-400 p-2 text-center font-bold text-blue-600 bg-blue-50/50">${I}</td>
+            <td class="border border-slate-400 p-2 text-center font-bold text-amber-600 bg-amber-50/50">${S}</td>
+            <td class="border border-slate-400 p-2 text-center font-bold ${A > 0 ? 'text-red-600 bg-red-50' : 'text-slate-400 bg-slate-50'}">${A}</td>
+            <td class="border border-slate-400 p-2 text-center font-extrabold text-slate-700">${percentage}%</td>
+          </tr>`;
       });
 
+      // Area penandatanganan Wali Kelas
       reportHtml += `
             </tbody>
           </table>
 
-          <!-- TANDA TANGAN -->
-          <div class="mt-12 grid grid-cols-2 text-xs">
-            <div>
-              <p>Mengetahui,</p>
-              <p class="font-bold mt-1">Kepala Sekolah SMP Kr. MDC</p>
-              <br><br><br>
-              <p class="font-bold underline">Drs. H. Mulyono, M.Pd</p>
-              <p class="text-slate-400">NIPY. 197410212002121001</p>
-            </div>
-            <div class="text-right">
-              <p>Surabaya, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              <p class="font-bold mt-1">Koordinator Tata Usaha</p>
-              <br><br><br>
-              <p class="font-bold underline">Anisa Fitria, S.Pd</p>
-              <p class="text-slate-400">NIPY. 198503142010122003</p>
+          <div class="mt-8 flex justify-end">
+            <div class="text-center text-xs" style="width: 250px;">
+              <div>Surabaya, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+              <div class="mt-2 mb-16">Mengetahui,<br><strong class="text-slate-700">Wali Kelas</strong></div>
+              <div class="border-b border-slate-500 w-full mb-1"></div>
+              <div class="font-bold text-slate-400 text-[10px]">NIP. .............................</div>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
 
       document.getElementById('report-preview-container').innerHTML = reportHtml;
+      
+      // Copy ke wadah area print
       document.getElementById('print-full-page').innerHTML = reportHtml;
     }
 
-    // Pemicu cetak
+    // --- PROSES CETAK PREVIEW LAPORAN ---
     function printReport() {
-      const content = document.getElementById('print-full-page').innerHTML;
-      if (!content || content.includes("menyusun bagan")) {
-        showModal("Gagal Mencetak", "Silakan proses laporan terlebih dahulu.", "warning");
+      const preview = document.getElementById('print-full-page').innerHTML;
+      if (!preview || preview.includes('Klik tombol "Proses"')) {
+        showModal("Laporan Kosong", "Silakan klik tombol 'Proses' terlebih dahulu untuk menyusun rekap bulanan.", "fa-solid fa-triangle-exclamation text-amber-500");
         return;
       }
       window.print();
     }
 
-    // --- NAVIGASI ---
-    function switchTab(tabName) {
-      const contents = document.querySelectorAll('.tab-content');
-      contents.forEach(content => content.classList.add('hidden'));
-
-      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-
-      const buttons = document.querySelectorAll('.tab-btn');
-      buttons.forEach(btn => {
-        btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium text-indigo-200 hover:text-white transition";
-      });
-
-      const activeBtn = document.getElementById(`btn-tab-${tabName}`);
-      if (activeBtn) {
-        activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-indigo-700 text-white";
-      }
-
-      // Proteksi menghentikan kamera HP saat user berpindah dari tab Scan
-      if (tabName !== 'scan') {
-        if (appState.isCameraActive) {
-          toggleCameraScanner();
-        }
+    // ==============================================
+    // DIALOG MODAL CONTROLLER (CUSTOM NOTIFICATION)
+    // ==============================================
+    function showModal(title, msg, iconClass = "fa-solid fa-circle-info text-indigo-500") {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-message').innerText = msg;
+      
+      const container = document.getElementById('modal-icon-container');
+      container.innerHTML = `<i class="${iconClass}"></i>`;
+      
+      // Warnai container sesuai status sukses/error
+      if (iconClass.includes('text-emerald-500')) {
+        container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-100 text-3xl";
+      } else if (iconClass.includes('text-red-500')) {
+        container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100 text-3xl";
+      } else if (iconClass.includes('text-amber-500')) {
+        container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-amber-100 text-3xl";
       } else {
-        if (!appState.isCameraActive) {
-          focusBarcodeField();
-        }
-      }
-    }
-
-    // --- PENGATURAN ---
-    function saveSettings() {
-      const url = document.getElementById('gas-url').value.trim();
-      appState.gasUrl = url;
-      localStorage.setItem('gas_absensi_url', url);
-      
-      showModal("Disimpan", "Pengaturan sambungan server berhasil diperbarui.", "success");
-      updateConnectionBanner();
-      loadData();
-    }
-
-    function toggleOfflineMode() {
-      const check = document.getElementById('offline-mode-chk').checked;
-      appState.isOffline = check;
-      localStorage.setItem('gas_absensi_offline', check);
-      
-      updateConnectionBanner();
-      loadData();
-    }
-
-    async function testConnection() {
-      const url = document.getElementById('gas-url').value.trim();
-      if (!url) {
-        showModal("Gagal", "URL Google Apps Script masih kosong.", "warning");
-        return;
+        container.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-slate-100 text-3xl";
       }
 
-      showModal("Mencoba...", "Menghubungkan ke server...", "info");
-
-      try {
-        const response = await fetch(url);
-        const text = await response.text();
-        const data = JSON.parse(text);
-        if (data.status === "success") {
-          showModal("Sukses", "Koneksi berhasil dan sinkronisasi aktif!", "success");
-        } else {
-          showModal("Gagal", "Format tidak cocok: " + text, "warning");
-        }
-      } catch (err) {
-        showModal("Kesalahan", "Gagal menghubungi Apps Script: " + err.message, "danger");
-      }
-    }
-
-    // --- MODAL ---
-    function showModal(title, msg, type = 'info') {
       const modal = document.getElementById('custom-modal');
       const box = document.getElementById('modal-box');
-      const mTitle = document.getElementById('modal-title');
-      const mMsg = document.getElementById('modal-message');
-      const iconBox = document.getElementById('modal-icon-container');
-
-      mTitle.innerText = title;
-      mMsg.innerText = msg;
-
-      if (type === 'success') {
-        iconBox.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-        iconBox.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-100 text-emerald-600 text-3xl";
-      } else if (type === 'warning') {
-        iconBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-        iconBox.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-amber-100 text-amber-600 text-3xl";
-      } else if (type === 'danger') {
-        iconBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-        iconBox.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-rose-100 text-rose-600 text-3xl";
-      } else {
-        iconBox.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
-        iconBox.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-blue-100 text-blue-600 text-3xl";
-      }
-
+      
       modal.classList.remove('hidden');
-      setTimeout(() => {
-        box.className = "bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 transform scale-100 transition-transform duration-200";
-      }, 50);
+      setTimeout(() => box.classList.remove('scale-95'), 10);
     }
 
     function closeModal() {
       const modal = document.getElementById('custom-modal');
       const box = document.getElementById('modal-box');
       
-      box.className = "bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 transform scale-95 transition-transform duration-200";
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 150);
+      box.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 150);
       
-      if (!appState.isCameraActive) {
-        focusBarcodeField();
-      }
+      focusBarcodeField();
     }
   </script>
 </body>
