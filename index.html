@@ -307,6 +307,77 @@
       }
     }
 
+  
+    /* STATUS PROSES KAMERA — overlay tetap memakai ukuran frame kamera */
+    .camera-stage {
+      position: relative;
+    }
+
+    .camera-process-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, .78);
+      backdrop-filter: blur(4px);
+      border-radius: 18px;
+    }
+
+    .camera-process-overlay.show {
+      display: flex;
+    }
+
+    .camera-process-card {
+      width: min(88%, 320px);
+      border-radius: 22px;
+      background: rgba(255,255,255,.96);
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+
+    .camera-process-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .camera-process-icon.reading {
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    .camera-process-icon.success {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .camera-process-icon.error {
+      background: #fff1f2;
+      color: #e11d48;
+    }
+
+    .camera-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(79, 70, 229, .18);
+      border-top-color: #4f46e5;
+      border-radius: 999px;
+      animation: cameraSpin .8s linear infinite;
+    }
+
+    @keyframes cameraSpin {
+      to { transform: rotate(360deg); }
+    }
+
   </style>
 </head>
 
@@ -523,8 +594,22 @@
             </button>
           </div>
 
-          <div id="camera-scanner" class="hidden mt-4">
+          <div id="camera-scanner" class="hidden mt-4 camera-stage">
             <div id="reader"></div>
+
+            <div id="camera-process-overlay" class="camera-process-overlay" aria-live="polite">
+              <div class="camera-process-card">
+                <div id="camera-process-icon" class="camera-process-icon reading">
+                  <div class="camera-spinner"></div>
+                </div>
+                <h4 id="camera-process-title" class="text-lg font-extrabold text-slate-900 mt-4">
+                  Kode Berhasil Dibaca
+                </h4>
+                <p id="camera-process-message" class="text-sm text-slate-500 mt-2">
+                  Sedang menyimpan data ke Google Sheets...
+                </p>
+              </div>
+            </div>
           </div>
           <div id="static-scanner" class="hidden"></div>
         </div>
@@ -723,7 +808,10 @@
     lastScanAt: 0,
     autoSyncTimer: null,
     autoSyncIntervalMs: 5000,
-    isSyncing: false
+    isSyncing: false,
+    cameraCodeCooldown: new Map(),
+    cameraCooldownMs: 10000,
+    audioContext: null
   };
 
   document.addEventListener("DOMContentLoaded", initApp);
@@ -772,6 +860,15 @@
 
     document.getElementById("student-search").addEventListener("input", renderStudents);
     document.getElementById("history-search").addEventListener("input", renderHistory);
+
+    // Membuka izin audio browser pada interaksi pertama pengguna.
+    const unlockAudio = () => {
+      getAudioContext();
+      document.removeEventListener("pointerdown", unlockAudio);
+      document.removeEventListener("keydown", unlockAudio);
+    };
+    document.addEventListener("pointerdown", unlockAudio);
+    document.addEventListener("keydown", unlockAudio);
 
     document.addEventListener("click", event => {
       const activeScan = !document.getElementById("tab-scan").classList.contains("hidden");
@@ -889,12 +986,51 @@
         response.isDuplicate
       );
 
+      // Jika scan berasal dari kamera, tampilkan status penyimpanan
+      // pada area kamera dengan ukuran layout tetap.
+      if (method === "Kamera" && APP.cameraActive && APP.camera) {
+        try {
+          await APP.camera.pause(true);
+
+          if (response.isDuplicate) {
+            showCameraProcess(
+              "error",
+              "Sudah Pernah Dipindai",
+              "Data siswa ini sudah tercatat hari ini."
+            );
+          } else {
+            showCameraProcess(
+              "success",
+              "Berhasil Disimpan",
+              "Data siswa berhasil dicatat ke Google Sheets."
+            );
+          }
+
+          setTimeout(() => {
+            try {
+              if (APP.cameraActive && APP.camera) {
+                APP.camera.resume();
+              }
+              hideCameraProcess();
+            } catch (resumeError) {
+              console.warn("Gagal melanjutkan kamera:", resumeError);
+            }
+          }, response.isDuplicate ? 1800 : 1400);
+
+        } catch (pauseError) {
+          console.warn("Gagal menjeda kamera:", pauseError);
+          hideCameraProcess(1200);
+        }
+      }
+
       renderAll();
       setScannerStatus("standby");
 
       if (response.isDuplicate) {
+        playWarningBeep();
         showToast("Sudah Dicek", response.message, "warning");
       } else {
+        playSuccessBeep();
         showToast("Berhasil", response.message, "success");
       }
 
@@ -979,6 +1115,93 @@
     }
   }
 
+  function showCameraProcess(state = "reading", title = "", message = "") {
+    const overlay = document.getElementById("camera-process-overlay");
+    const icon = document.getElementById("camera-process-icon");
+    const titleEl = document.getElementById("camera-process-title");
+    const messageEl = document.getElementById("camera-process-message");
+
+    if (!overlay || !icon || !titleEl || !messageEl) return;
+
+    overlay.classList.add("show");
+
+    if (state === "reading") {
+      icon.className = "camera-process-icon reading";
+      icon.innerHTML = '<div class="camera-spinner"></div>';
+      titleEl.textContent = title || "Kode Berhasil Dibaca";
+      messageEl.textContent = message || "Sedang menyimpan data ke Google Sheets...";
+    } else if (state === "success") {
+      icon.className = "camera-process-icon success";
+      icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+      titleEl.textContent = title || "Berhasil Disimpan";
+      messageEl.textContent = message || "Data siswa berhasil dicatat.";
+    } else {
+      icon.className = "camera-process-icon error";
+      icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+      titleEl.textContent = title || "Gagal Memproses";
+      messageEl.textContent = message || "Silakan arahkan kartu dan scan kembali.";
+    }
+  }
+
+  function hideCameraProcess(delay = 0) {
+    const overlay = document.getElementById("camera-process-overlay");
+    if (!overlay) return;
+
+    setTimeout(() => {
+      overlay.classList.remove("show");
+    }, delay);
+  }
+
+  function getAudioContext() {
+    if (!APP.audioContext) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      APP.audioContext = new AudioContextClass();
+    }
+
+    if (APP.audioContext.state === "suspended") {
+      APP.audioContext.resume().catch(() => {});
+    }
+
+    return APP.audioContext;
+  }
+
+  function playTone(frequency, duration, delay = 0, volume = 0.16) {
+    const context = getAudioContext();
+    if (!context) return;
+
+    const startAt = context.currentTime + delay;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, startAt);
+
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.015);
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      startAt + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+
+    oscillator.start(startAt);
+    oscillator.stop(startAt + duration + 0.03);
+  }
+
+  function playSuccessBeep() {
+    // Satu beep bernada lebih tinggi: data berhasil dibaca dan disimpan.
+    playTone(880, 0.18, 0, 0.18);
+  }
+
+  function playWarningBeep() {
+    // Dua beep: kartu gagal dikenali atau sudah pernah discan.
+    playTone(520, 0.14, 0, 0.18);
+    playTone(520, 0.14, 0.22, 0.18);
+  }
+
   function showStudentResult(student, log, method, duplicate) {
     document.getElementById("student-empty").classList.add("hidden");
     document.getElementById("student-result").classList.remove("hidden");
@@ -1023,7 +1246,17 @@
 
   function showScanError(message, code) {
     APP.scanBusy = false;
+    playWarningBeep();
     setScannerStatus("error");
+
+    if (APP.cameraActive) {
+      showCameraProcess(
+        "error",
+        "Gagal Membaca Data",
+        message || "Silakan arahkan kartu dan scan kembali."
+      );
+      hideCameraProcess(1800);
+    }
 
     const card = document.getElementById("student-result-card");
     card.classList.remove("flash-success", "flash-error");
@@ -1203,9 +1436,32 @@
           aspectRatio: 1.35
         },
         decodedText => {
+          const code = String(decodedText || "").trim();
+          if (!code) return;
+
           const now = Date.now();
-          if (decodedText === APP.lastCode && now - APP.lastScanAt < 3000) return;
-          processScan(decodedText, "Kamera");
+          const lastCameraScan = APP.cameraCodeCooldown.get(code) || 0;
+
+          // Jangan proses kode yang sama berkali-kali selama kartu masih berada
+          // di depan kamera. Cooldown dibuat lebih panjang daripada animasi scan.
+          if (now - lastCameraScan < APP.cameraCooldownMs) return;
+
+          APP.cameraCodeCooldown.set(code, now);
+
+          showCameraProcess(
+            "reading",
+            "Kode Berhasil Dibaca",
+            "Sedang menyimpan data ke Google Sheets..."
+          );
+
+          // Bersihkan cache lama agar Map tidak terus membesar.
+          for (const [savedCode, savedTime] of APP.cameraCodeCooldown.entries()) {
+            if (now - savedTime > APP.cameraCooldownMs * 2) {
+              APP.cameraCodeCooldown.delete(savedCode);
+            }
+          }
+
+          processScan(code, "Kamera");
         },
         () => {}
       );
@@ -1232,6 +1488,7 @@
     }
 
     APP.cameraActive = false;
+    hideCameraProcess();
     document.getElementById("camera-scanner").classList.add("hidden");
     document.getElementById("camera-btn").classList.remove("hidden");
     document.getElementById("stop-camera-btn").classList.add("hidden");
