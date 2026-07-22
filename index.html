@@ -378,6 +378,54 @@
       to { transform: rotate(360deg); }
     }
 
+  
+    /* LOCK INPUT BARCODE SAAT PROSES SIMPAN */
+    .barcode-input-wrap {
+      position: relative;
+    }
+
+    .barcode-input-lock {
+      position: absolute;
+      inset: 0;
+      z-index: 15;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-radius: 12px;
+      background: rgba(241, 245, 249, .92);
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 800;
+      backdrop-filter: blur(2px);
+      cursor: wait;
+    }
+
+    .barcode-input-wrap.locked .barcode-input-lock {
+      display: flex;
+    }
+
+    .barcode-input-wrap.locked input,
+    .barcode-input-wrap.locked button {
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    .barcode-input-wrap.locked input {
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+
+    .mini-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(79, 70, 229, .18);
+      border-top-color: #4f46e5;
+      border-radius: 999px;
+      animation: cameraSpin .8s linear infinite;
+    }
+
   </style>
 </head>
 
@@ -559,19 +607,26 @@
             Simulasi/Input Kode Barcode
           </label>
 
-          <div class="flex gap-2">
-            <div class="relative flex-1">
-              <i class="fa-solid fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-              <input id="barcode-input"
-                     type="text"
-                     autocomplete="off"
-                     placeholder="Scan kartu disini..."
-                     class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono tracking-[.18em] focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500">
+          <div id="barcode-input-wrap" class="barcode-input-wrap">
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <i class="fa-solid fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input id="barcode-input"
+                       type="text"
+                       autocomplete="off"
+                       placeholder="Scan kartu disini..."
+                       class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono tracking-[.18em] focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500">
+              </div>
+              <button id="submit-scan-btn"
+                      class="px-4 rounded-xl bg-indigo-100 text-indigo-700 font-extrabold hover:bg-indigo-200 transition">
+                Kirim
+              </button>
             </div>
-            <button id="submit-scan-btn"
-                    class="px-4 rounded-xl bg-indigo-100 text-indigo-700 font-extrabold hover:bg-indigo-200 transition">
-              Kirim
-            </button>
+
+            <div id="barcode-input-lock" class="barcode-input-lock" aria-live="polite">
+              <div class="mini-spinner"></div>
+              <span>Sedang menyimpan ke Google Sheets...</span>
+            </div>
           </div>
 
           <div class="mt-5 rounded-2xl bg-slate-50 border border-slate-100 p-4">
@@ -855,6 +910,17 @@
       }
     });
 
+    // Buang karakter sisa dari scanner fisik selama backend masih menyimpan.
+    document.addEventListener("keydown", event => {
+      if (!APP.scanBusy) return;
+
+      const allowedKeys = ["F5", "Escape"];
+      if (!allowedKeys.includes(event.key)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+
     document.getElementById("camera-btn").addEventListener("click", startCamera);
     document.getElementById("stop-camera-btn").addEventListener("click", stopCamera);
 
@@ -957,6 +1023,7 @@
     APP.lastScanAt = now;
     APP.scanBusy = true;
     input.value = "";
+    setBarcodeInputLocked(true);
     setScannerStatus("processing");
 
     try {
@@ -1034,7 +1101,7 @@
         showToast("Berhasil", response.message, "success");
       }
 
-      setTimeout(() => input.focus(), 100);
+      setBarcodeInputLocked(false);
     } catch (error) {
       APP.scanBusy = false;
       showScanError(error.message || String(error), code);
@@ -1112,6 +1179,32 @@
       return JSON.parse(text);
     } catch (error) {
       throw new Error("Respons POST backend bukan JSON.");
+    }
+  }
+
+  function setBarcodeInputLocked(locked, message = "Sedang menyimpan ke Google Sheets...") {
+    const wrap = document.getElementById("barcode-input-wrap");
+    const input = document.getElementById("barcode-input");
+    const button = document.getElementById("submit-scan-btn");
+    const lock = document.getElementById("barcode-input-lock");
+
+    if (!wrap || !input || !button || !lock) return;
+
+    const text = lock.querySelector("span");
+    if (text) text.textContent = message;
+
+    wrap.classList.toggle("locked", locked);
+    input.disabled = locked;
+    button.disabled = locked;
+
+    if (locked) {
+      input.value = "";
+      input.blur();
+    } else {
+      setTimeout(() => {
+        input.value = "";
+        input.focus();
+      }, 80);
     }
   }
 
@@ -1246,6 +1339,7 @@
 
   function showScanError(message, code) {
     APP.scanBusy = false;
+    setBarcodeInputLocked(false);
     playWarningBeep();
     setScannerStatus("error");
 
