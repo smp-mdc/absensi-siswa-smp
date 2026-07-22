@@ -1136,7 +1136,7 @@
       button.classList.toggle("text-slate-400", !active);
     });
 
-    if (tab === "scan") {
+    if (tab === "scan" && !APP.cameraActive && !isTouchDevice()) {
       setTimeout(() => document.getElementById("barcode-input").focus(), 100);
     }
   }
@@ -1586,7 +1586,9 @@
     } else {
       setTimeout(() => {
         input.value = "";
-        input.focus();
+        if (!APP.cameraActive && !isTouchDevice()) {
+          input.focus();
+        }
       }, 80);
     }
   }
@@ -1793,8 +1795,10 @@
     showToast("Kartu Tidak Dikenali", message + (code ? " (" + code + ")" : ""), "error");
 
     setTimeout(() => {
-      setScannerStatus("standby");
-      document.getElementById("barcode-input").focus();
+      setScannerStatus(APP.cameraActive ? "camera" : "standby");
+      if (!APP.cameraActive && !isTouchDevice()) {
+        document.getElementById("barcode-input").focus();
+      }
     }, 1300);
   }
 
@@ -2265,8 +2269,21 @@
     `).join("");
   }
 
+  function isTouchDevice() {
+    return (
+      window.matchMedia?.("(pointer: coarse)").matches ||
+      navigator.maxTouchPoints > 0 ||
+      "ontouchstart" in window
+    );
+  }
+
   async function startCamera() {
     if (APP.cameraActive) return;
+
+    const barcodeInput = document.getElementById("barcode-input");
+    barcodeInput.blur();
+    barcodeInput.readOnly = true;
+    barcodeInput.setAttribute("inputmode", "none");
 
     document.getElementById("camera-scanner").classList.remove("hidden");
     document.getElementById("camera-btn").classList.add("hidden");
@@ -2279,11 +2296,24 @@
         { facingMode: "environment" },
         {
           fps: 12,
+          // Area pindai dibuat memanjang agar sesuai barcode kartu siswa.
           qrbox: (width, height) => {
-            const size = Math.floor(Math.min(width, height) * .68);
-            return { width: size, height: Math.floor(size * .72) };
+            const boxWidth = Math.floor(Math.min(width * 0.90, 620));
+            const boxHeight = Math.floor(
+              Math.max(90, Math.min(boxWidth * 0.28, height * 0.30))
+            );
+            return { width: boxWidth, height: boxHeight };
           },
-          aspectRatio: 1.35
+          aspectRatio: 16 / 9,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODABAR,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E
+          ]
         },
         decodedText => {
           const code = String(decodedText || "").trim();
@@ -2320,6 +2350,8 @@
       setScannerStatus("camera");
     } catch (error) {
       APP.cameraActive = false;
+      barcodeInput.readOnly = false;
+      barcodeInput.setAttribute("inputmode", "numeric");
       document.getElementById("camera-scanner").classList.add("hidden");
       document.getElementById("camera-btn").classList.remove("hidden");
       document.getElementById("stop-camera-btn").classList.add("hidden");
@@ -2339,11 +2371,21 @@
 
     APP.cameraActive = false;
     hideCameraProcess();
+
+    const barcodeInput = document.getElementById("barcode-input");
+    barcodeInput.readOnly = false;
+    barcodeInput.setAttribute("inputmode", "numeric");
+
     document.getElementById("camera-scanner").classList.add("hidden");
     document.getElementById("camera-btn").classList.remove("hidden");
     document.getElementById("stop-camera-btn").classList.add("hidden");
     setScannerStatus("standby");
-    document.getElementById("barcode-input").focus();
+
+    // Desktop barcode scanner tetap mendapat fokus otomatis.
+    // Pada HP/tablet, jangan memunculkan keyboard setelah kamera ditutup.
+    if (!isTouchDevice()) {
+      barcodeInput.focus();
+    }
   }
 
   function setScannerStatus(status) {
