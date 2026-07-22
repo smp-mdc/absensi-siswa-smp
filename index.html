@@ -1005,8 +1005,13 @@
     initializeReportFilters();
     switchTab("scan");
     loadCachedBootstrap();
-    startInitialSync();
     startAutoSync();
+
+    // Gunakan alur yang sama persis dengan tombol Sinkronkan,
+    // tetapi jalankan otomatis setelah seluruh halaman selesai dimuat.
+    window.addEventListener("load", () => {
+      setTimeout(() => runAutomaticSync(), 250);
+    }, { once: true });
 
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden && APP.initialSyncFinished) {
@@ -1021,6 +1026,36 @@
     });
   }
 
+  async function runAutomaticSync() {
+    if (APP.isSyncing) {
+      setTimeout(() => runAutomaticSync(), 700);
+      return;
+    }
+
+    const response = await loadBootstrap(false);
+
+    if (response && response.status === "success") {
+      APP.initialSyncFinished = true;
+      return;
+    }
+
+    // Retry otomatis maksimal beberapa kali, tanpa perlu klik manual.
+    APP.startupRetryCount = (APP.startupRetryCount || 0) + 1;
+
+    if (APP.startupRetryCount < 4) {
+      setConnection(
+        "loading",
+        `Mencoba sinkronisasi otomatis (${APP.startupRetryCount + 1}/4)...`
+      );
+      setTimeout(() => runAutomaticSync(), 1200);
+    } else {
+      setConnection(
+        "error",
+        "Sinkronisasi otomatis gagal. Tekan Sinkronkan."
+      );
+    }
+  }
+
   function bindNavigation() {
     document.querySelectorAll("[data-tab]").forEach(button => {
       button.addEventListener("click", () => switchTab(button.dataset.tab));
@@ -1029,16 +1064,8 @@
 
   function bindEvents() {
     document.getElementById("sync-btn").addEventListener("click", async () => {
-      if (APP.isSyncing && APP.initialSyncPromise) {
-        showToast(
-          "Sinkronisasi Berjalan",
-          "Data sedang diambil. Mohon tunggu sebentar.",
-          "warning"
-        );
-        return;
-      }
-
-      await loadBootstrap(false);
+      APP.startupRetryCount = 0;
+      await runAutomaticSync();
     });
     document.getElementById("submit-scan-btn").addEventListener("click", () => {
       processScan(document.getElementById("barcode-input").value, "Barcode / Manual");
@@ -1304,7 +1331,6 @@
 
     APP.autoSyncTimer = setInterval(() => {
       if (
-        APP.initialSyncFinished &&
         !document.hidden &&
         !APP.scanBusy &&
         !APP.isSyncing
