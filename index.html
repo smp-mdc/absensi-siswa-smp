@@ -989,7 +989,9 @@
     report: null,
     reportMode: "monthly",
     startupRetryCount: 0,
-    maxStartupRetries: 3
+    maxStartupRetries: 3,
+    initialSyncFinished: false,
+    initialSyncPromise: null
   };
 
   document.addEventListener("DOMContentLoaded", initApp);
@@ -1007,13 +1009,15 @@
     startAutoSync();
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
+      if (!document.hidden && APP.initialSyncFinished) {
         loadBootstrap(true);
       }
     });
 
     window.addEventListener("focus", () => {
-      loadBootstrap(true);
+      if (APP.initialSyncFinished) {
+        loadBootstrap(true);
+      }
     });
   }
 
@@ -1025,7 +1029,15 @@
 
   function bindEvents() {
     document.getElementById("sync-btn").addEventListener("click", async () => {
-      APP.isSyncing = false;
+      if (APP.isSyncing && APP.initialSyncPromise) {
+        showToast(
+          "Sinkronisasi Berjalan",
+          "Data sedang diambil. Mohon tunggu sebentar.",
+          "warning"
+        );
+        return;
+      }
+
       await loadBootstrap(false);
     });
     document.getElementById("submit-scan-btn").addEventListener("click", () => {
@@ -1101,35 +1113,55 @@
   }
 
   async function startInitialSync() {
-    APP.startupRetryCount = 0;
+    if (APP.initialSyncPromise) return APP.initialSyncPromise;
 
-    while (APP.startupRetryCount < APP.maxStartupRetries) {
-      try {
-        await loadBootstrap(false, true);
-        return;
-      } catch (error) {
-        APP.startupRetryCount++;
+    APP.initialSyncPromise = (async () => {
+      APP.startupRetryCount = 0;
 
-        if (APP.startupRetryCount >= APP.maxStartupRetries) {
+      while (APP.startupRetryCount < APP.maxStartupRetries) {
+        try {
+          const response = await loadBootstrap(false, true);
+
+          if (!response || response.status !== "success") {
+            throw new Error("Data awal belum berhasil dimuat.");
+          }
+
+          APP.initialSyncFinished = true;
+          return response;
+
+        } catch (error) {
+          APP.startupRetryCount++;
+
+          if (APP.startupRetryCount >= APP.maxStartupRetries) {
+            APP.initialSyncFinished = true;
+            setConnection(
+              "error",
+              "Koneksi awal gagal. Tekan Sinkronkan untuk mencoba lagi."
+            );
+            showToast(
+              "Koneksi Awal Gagal",
+              error.message || "Server belum merespons.",
+              "error"
+            );
+            return null;
+          }
+
           setConnection(
-            "error",
-            "Belum terhubung. Tekan Sinkronkan untuk mencoba lagi."
+            "loading",
+            `Mencoba koneksi ulang (${APP.startupRetryCount + 1}/${APP.maxStartupRetries})...`
           );
-          showToast(
-            "Koneksi Belum Siap",
-            "Server Google Apps Script belum merespons. Tekan tombol Sinkronkan.",
-            "warning"
-          );
-          return;
+
+          await wait(1000 * APP.startupRetryCount);
         }
-
-        setConnection(
-          "loading",
-          `Mencoba koneksi ulang (${APP.startupRetryCount + 1}/${APP.maxStartupRetries})...`
-        );
-
-        await wait(1200 * APP.startupRetryCount);
       }
+
+      return null;
+    })();
+
+    try {
+      return await APP.initialSyncPromise;
+    } finally {
+      APP.initialSyncPromise = null;
     }
   }
 
@@ -1155,9 +1187,8 @@
 
   async function loadBootstrap(silent = false, throwOnError = false) {
     if (APP.isSyncing) {
-      if (throwOnError) {
-        await wait(350);
-        return loadBootstrap(silent, throwOnError);
+      if (throwOnError && APP.initialSyncPromise) {
+        return APP.initialSyncPromise;
       }
       return null;
     }
@@ -1165,39 +1196,33 @@
     APP.isSyncing = true;
 
     if (!silent) {
-      setConnection("loading", "Mengambil data siswa dan riwayat hari ini...");
+      setConnection("loading", "Mengambil data dari Google Sheets...");
     }
 
     try {
-      // Data siswa dan log hari ini diambil secara paralel.
-      // Ini lebih stabil daripada menunggu satu endpoint getBootstrap
-      // yang mengerjakan semuanya secara berurutan.
-      const [studentResponse, logResponse] = await Promise.all([
-        apiGet("getStudents", { t: Date.now() }, 15000),
-        apiGet("getTodayLogs", { t: Date.now() }, 15000)
-      ]);
+      // Satu request saja. Dua request paralel ke Apps Script pada saat
+      // startup dapat saling menunggu dan membuat halaman baru selesai
+      // setelah tombol Sinkronkan ditekan.
+      const response = await apiGet(
+        "getBootstrap",
+        { t: Date.now() },
+        12000
+      );
 
-      if (!studentResponse || studentResponse.status !== "success") {
-        throw new Error(
-          studentResponse?.message || "Data siswa gagal dimuat."
-        );
+      if (!response || response.status !== "success") {
+        throw new Error(response?.message || "Data awal gagal dimuat.");
       }
 
-      if (!logResponse || logResponse.status !== "success") {
-        throw new Error(
-          logResponse?.message || "Riwayat hari ini gagal dimuat."
-        );
-      }
-
-      APP.students = Array.isArray(studentResponse.students)
-        ? studentResponse.students
+      APP.students = Array.isArray(response.students)
+        ? response.students
         : [];
 
-      APP.logs = Array.isArray(logResponse.logs)
-        ? logResponse.logs
+      APP.logs = Array.isArray(response.logs)
+        ? response.logs
         : [];
 
-      APP.dashboard = buildClientDashboard(APP.students, APP.logs);
+      APP.dashboard = response.dashboard ||
+        buildClientDashboard(APP.students, APP.logs);
 
       try {
         localStorage.setItem("smart-check-card-bootstrap", JSON.stringify({
@@ -1218,12 +1243,7 @@
         `Terhubung dengan Google Sheets · ${APP.logs.length} aktivitas hari ini`
       );
 
-      return {
-        status: "success",
-        students: APP.students,
-        logs: APP.logs,
-        dashboard: APP.dashboard
-      };
+      return response;
 
     } catch (error) {
       if (!silent && !throwOnError) {
@@ -1267,7 +1287,12 @@
     }
 
     APP.autoSyncTimer = setInterval(() => {
-      if (!document.hidden && !APP.scanBusy) {
+      if (
+        APP.initialSyncFinished &&
+        !document.hidden &&
+        !APP.scanBusy &&
+        !APP.isSyncing
+      ) {
         loadBootstrap(true);
       }
     }, APP.autoSyncIntervalMs);
