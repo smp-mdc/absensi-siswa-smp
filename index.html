@@ -1116,7 +1116,7 @@
     document.addEventListener("click", event => {
       const activeScan = !document.getElementById("tab-scan").classList.contains("hidden");
       const isControl = ["INPUT", "BUTTON", "SELECT", "TEXTAREA"].includes(event.target.tagName);
-      if (activeScan && !isControl && !APP.cameraActive) {
+      if (activeScan && !isControl && !APP.cameraActive && !isMobileDevice()) {
         document.getElementById("barcode-input").focus();
       }
     });
@@ -1136,8 +1136,12 @@
       button.classList.toggle("text-slate-400", !active);
     });
 
-    if (tab === "scan" && !APP.cameraActive && !isTouchDevice()) {
-      setTimeout(() => document.getElementById("barcode-input").focus(), 100);
+    if (tab === "scan" && !APP.cameraActive && !isMobileDevice()) {
+      setTimeout(() => {
+        const input = document.getElementById("barcode-input");
+        input.focus();
+        input.select();
+      }, 100);
     }
   }
 
@@ -1586,8 +1590,9 @@
     } else {
       setTimeout(() => {
         input.value = "";
-        if (!APP.cameraActive && !isTouchDevice()) {
+        if (!APP.cameraActive && !isMobileDevice()) {
           input.focus();
+          input.select();
         }
       }, 80);
     }
@@ -2277,6 +2282,16 @@
     );
   }
 
+  function isMobileDevice() {
+    if (navigator.userAgentData && typeof navigator.userAgentData.mobile === "boolean") {
+      return navigator.userAgentData.mobile;
+    }
+
+    return /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(
+      navigator.userAgent || ""
+    );
+  }
+
   async function startCamera() {
     if (APP.cameraActive) return;
 
@@ -2383,8 +2398,9 @@
 
     // Desktop barcode scanner tetap mendapat fokus otomatis.
     // Pada HP/tablet, jangan memunculkan keyboard setelah kamera ditutup.
-    if (!isTouchDevice()) {
+    if (!isMobileDevice()) {
       barcodeInput.focus();
+      barcodeInput.select();
     }
   }
 
