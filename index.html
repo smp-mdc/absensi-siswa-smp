@@ -1007,11 +1007,13 @@
     loadCachedBootstrap();
     startAutoSync();
 
-    // Gunakan alur yang sama persis dengan tombol Sinkronkan,
-    // tetapi jalankan otomatis setelah seluruh halaman selesai dimuat.
-    window.addEventListener("load", () => {
-      setTimeout(() => runAutomaticSync(), 250);
-    }, { once: true });
+    // Jalankan tombol Sinkronkan secara langsung setelah semua event
+    // sudah terpasang. Tidak menunggu event window.load, karena pada
+    // beberapa browser event tersebut bisa sudah terlewat saat initApp jalan.
+    setTimeout(() => {
+      const syncButton = document.getElementById("sync-btn");
+      if (syncButton) syncButton.click();
+    }, 500);
 
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden && APP.initialSyncFinished) {
@@ -2419,13 +2421,17 @@
   }
 
   function setHistoryDate() {
-    document.getElementById("history-date").textContent =
-      new Date().toLocaleDateString("id-ID", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
+    const dateInline = document.getElementById("history-date-inline");
+
+    if (dateInline) {
+      dateInline.textContent =
+        "Tanggal: " +
+        new Date().toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        });
+    }
   }
 
   function animateNumber(elementId, target) {
