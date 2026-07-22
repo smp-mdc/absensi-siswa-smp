@@ -512,19 +512,6 @@
 
         //        // Memuat status inisialisasi aplikasi
         window.onload = function() {
-            if (localStorage.getItem('DB_SISWA')) {
-                databaseSiswa = JSON.parse(localStorage.getItem('DB_SISWA'));
-            } else {
-                databaseSiswa = DEFAULT_STUDENTS;
-                localStorage.setItem('DB_SISWA', JSON.stringify(databaseSiswa));
-            }
-
-            if (localStorage.getItem('LOG_ABSENSI')) {
-                logAbsensi = JSON.parse(localStorage.getItem('LOG_ABSENSI'));
-            } else {
-                generateMockAttendance();
-            }
-
             const hariIni = new Date();
             document.getElementById('today-date-text').innerText = "Tanggal: " + formatIndoDate(hariIni);
             document.getElementById('filter-bulan').value = hariIni.getMonth();
@@ -562,39 +549,82 @@
 
         //        // Sinkronisasi data dua arah dengan Google Sheets (Cloud API)
         async function syncWithCloud() {
-            updateCloudStatusUI("loading", "Menyinkronkan data dengan database Google Sheets...");
 
-            try {
-                // 1. Dapatkan database siswa terbaru dari Google Sheet
-                const response = await fetch(`${googleScriptUrl}?action=getStudents`);
-                if (response.ok) {
-                    const cloudStudents = await response.json();
-                    if (cloudStudents && cloudStudents.length > 0) {
-                        databaseSiswa = cloudStudents;
-                        localStorage.setItem('DB_SISWA', JSON.stringify(databaseSiswa));
-                        renderSiswaGrid();
-                    }
-                }
+    updateCloudStatusUI(
+        "loading",
+        "Sinkronisasi dengan Google Sheets..."
+    );
 
-                // 2. Dapatkan seluruh log absensi dari Google Sheet
-                const responseLogs = await fetch(`${googleScriptUrl}?action=getLogs`);
-                if (responseLogs.ok) {
-                    const cloudLogs = await responseLogs.json();
-                    if (cloudLogs && cloudLogs.length > 0) {
-                        logAbsensi = cloudLogs;
-                        localStorage.setItem('LOG_ABSENSI', JSON.stringify(logAbsensi));
-                        renderTodayLog();
-                        prosesGenerateLaporan();
-                    }
-                }
+    try {
 
-                updateCloudStatusUI("success", "Sistem Sinkron dengan Google Sheets Cloud!");
+        // ===========================
+        // AMBIL DATA SISWA
+        // ===========================
 
-            } catch (err) {
-                console.error("Gagal melakukan sinkronisasi cloud:", err);
-                updateCloudStatusUI("error", "Koneksi Offline (Perubahan tersimpan lokal & akan dikirim saat online)");
-            }
+        const studentRes =
+            await fetch(
+                googleScriptUrl +
+                "?action=getStudents"
+            );
+
+        const studentJson =
+            await studentRes.json();
+
+        if (
+            studentJson.status === "success"
+        ) {
+
+            databaseSiswa =
+                studentJson.students;
+
+            renderSiswaGrid();
         }
+
+
+        // ===========================
+        // AMBIL LOG
+        // ===========================
+
+        const logRes =
+            await fetch(
+                googleScriptUrl +
+                "?action=getLogs"
+            );
+
+        const logJson =
+            await logRes.json();
+
+        if (
+            logJson.status === "success"
+        ) {
+
+            logAbsensi =
+                logJson.logs;
+
+            renderTodayLog();
+
+            prosesGenerateLaporan();
+        }
+
+        updateCloudStatusUI(
+            "success",
+            "Terhubung dengan Google Sheets"
+        );
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        updateCloudStatusUI(
+            "error",
+            "Tidak dapat terhubung ke server"
+        );
+
+    }
+
+}
 
         document.addEventListener('click', function(e) {
             const activeTab = document.querySelector('button[id$="-tab"].bg-indigo-700');
