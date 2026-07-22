@@ -779,37 +779,155 @@
     </section>
 
     <section id="tab-history" class="tab-section hidden space-y-6 fade-up">
-      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
         <div>
-          <p class="text-sm font-bold text-indigo-600">Riwayat</p>
-          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Aktivitas hari ini</h2>
-          <p id="history-date" class="text-sm text-slate-500 mt-2">-</p>
+          <p class="text-sm font-bold text-indigo-600">Laporan BK</p>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Rekap Pengecekan Kartu</h2>
+          <p class="text-sm text-slate-500 mt-2">
+            Rekap harian, mingguan, bulanan, per kelas, dan siswa yang tidak melakukan scan.
+          </p>
         </div>
-        <div class="relative w-full sm:w-72">
-          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input id="history-search"
-                 type="search"
-                 placeholder="Cari riwayat..."
-                 class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500">
+
+        <div class="flex flex-wrap gap-2">
+          <button id="report-today-btn"
+                  class="report-preset-btn px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-extrabold text-slate-700 hover:bg-slate-50">
+            Hari Ini
+          </button>
+          <button id="report-week-btn"
+                  class="report-preset-btn px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-extrabold text-slate-700 hover:bg-slate-50">
+            Minggu Ini
+          </button>
+          <button id="report-month-btn"
+                  class="report-preset-btn px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-extrabold hover:bg-indigo-700">
+            Bulan Ini
+          </button>
         </div>
       </div>
 
-      <div class="panel overflow-hidden">
-        <div class="table-wrap">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] tracking-wider">
-              <tr>
-                <th class="px-5 py-4 text-left">Waktu</th>
-                <th class="px-5 py-4 text-left">NIS</th>
-                <th class="px-5 py-4 text-left">Nama</th>
-                <th class="px-5 py-4 text-left">Kelas</th>
-                <th class="px-5 py-4 text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody id="history-table" class="divide-y divide-slate-100">
-              <tr><td colspan="5" class="px-5 py-12 text-center text-slate-400">Belum ada aktivitas hari ini.</td></tr>
-            </tbody>
-          </table>
+      <div class="panel p-5 sm:p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider font-extrabold text-slate-500 mb-2">Tanggal Awal</label>
+            <input id="report-start-date" type="date"
+                   class="w-full px-3 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider font-extrabold text-slate-500 mb-2">Tanggal Akhir</label>
+            <input id="report-end-date" type="date"
+                   class="w-full px-3 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider font-extrabold text-slate-500 mb-2">Kelas</label>
+            <select id="report-class"
+                    class="w-full px-3 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500">
+              <option value="Semua">Semua Kelas</option>
+            </select>
+          </div>
+
+          <div class="flex items-end">
+            <button id="generate-report-btn"
+                    class="w-full px-4 py-3 rounded-xl bg-indigo-600 text-white font-extrabold hover:bg-indigo-700 transition">
+              <i class="fa-solid fa-chart-column mr-2"></i>Tampilkan Rekap
+            </button>
+          </div>
+
+          <div class="flex items-end">
+            <button id="missing-today-btn"
+                    class="w-full px-4 py-3 rounded-xl bg-rose-50 text-rose-700 border border-rose-100 font-extrabold hover:bg-rose-100 transition">
+              <i class="fa-solid fa-user-xmark mr-2"></i>Tidak Scan Hari Ini
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="report-loading" class="panel p-10 text-center hidden">
+        <div class="camera-spinner mx-auto"></div>
+        <p class="text-sm font-bold text-slate-600 mt-4">Menyusun laporan dari Google Sheets...</p>
+      </div>
+
+      <div id="report-content" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <article class="panel p-5">
+            <p class="text-[11px] uppercase tracking-wider font-extrabold text-slate-500">Hari Efektif</p>
+            <p id="report-effective-days" class="text-3xl font-extrabold text-slate-900 mt-2">0</p>
+          </article>
+          <article class="panel p-5">
+            <p class="text-[11px] uppercase tracking-wider font-extrabold text-slate-500">Total Siswa</p>
+            <p id="report-total-students" class="text-3xl font-extrabold text-slate-900 mt-2">0</p>
+          </article>
+          <article class="panel p-5">
+            <p class="text-[11px] uppercase tracking-wider font-extrabold text-emerald-600">Membawa Kartu</p>
+            <p id="report-total-brought" class="text-3xl font-extrabold text-slate-900 mt-2">0</p>
+          </article>
+          <article class="panel p-5">
+            <p class="text-[11px] uppercase tracking-wider font-extrabold text-rose-600">Tidak Scan</p>
+            <p id="report-total-missing" class="text-3xl font-extrabold text-slate-900 mt-2">0</p>
+          </article>
+        </div>
+
+        <div class="panel p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-900">Rekap Per Kelas</h3>
+              <p id="report-period-label" class="text-xs text-slate-500 mt-1">Pilih periode untuk menampilkan laporan.</p>
+            </div>
+            <button id="export-report-btn"
+                    class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-extrabold hover:bg-emerald-700 transition">
+              <i class="fa-solid fa-file-csv mr-2"></i>Export CSV
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] tracking-wider">
+                <tr>
+                  <th class="px-4 py-4 text-left">Kelas</th>
+                  <th class="px-4 py-4 text-center">Jumlah Siswa</th>
+                  <th class="px-4 py-4 text-center">Membawa</th>
+                  <th class="px-4 py-4 text-center">Tidak Scan</th>
+                  <th class="px-4 py-4 text-center">Kepatuhan</th>
+                </tr>
+              </thead>
+              <tbody id="report-class-table" class="divide-y divide-slate-100">
+                <tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Belum ada laporan.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-900">Daftar Siswa</h3>
+              <p class="text-xs text-slate-500 mt-1">Diurutkan dari jumlah tidak scan terbanyak.</p>
+            </div>
+            <div class="relative w-full sm:w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input id="report-search" type="search" placeholder="Cari siswa..."
+                     class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500">
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] tracking-wider">
+                <tr>
+                  <th class="px-4 py-4 text-left">NIS</th>
+                  <th class="px-4 py-4 text-left">Nama</th>
+                  <th class="px-4 py-4 text-left">Kelas</th>
+                  <th class="px-4 py-4 text-center">Membawa</th>
+                  <th class="px-4 py-4 text-center">Tidak Scan</th>
+                  <th class="px-4 py-4 text-center">Persentase</th>
+                  <th class="px-4 py-4 text-left">Tanggal Tidak Scan</th>
+                </tr>
+              </thead>
+              <tbody id="report-student-table" class="divide-y divide-slate-100">
+                <tr><td colspan="7" class="px-4 py-10 text-center text-slate-400">Belum ada laporan.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -866,7 +984,10 @@
     isSyncing: false,
     cameraCodeCooldown: new Map(),
     cameraCooldownMs: 10000,
-    audioContext: null
+    audioContext: null,
+    currentDateKey: "",
+    report: null,
+    reportMode: "monthly"
   };
 
   document.addEventListener("DOMContentLoaded", initApp);
@@ -876,6 +997,8 @@
     bindEvents();
     startClock();
     setHistoryDate();
+    APP.currentDateKey = localDateKey(new Date());
+    initializeReportFilters();
     switchTab("scan");
     loadBootstrap();
     startAutoSync();
@@ -925,7 +1048,14 @@
     document.getElementById("stop-camera-btn").addEventListener("click", stopCamera);
 
     document.getElementById("student-search").addEventListener("input", renderStudents);
-    document.getElementById("history-search").addEventListener("input", renderHistory);
+
+    document.getElementById("report-today-btn").addEventListener("click", () => setReportPreset("today"));
+    document.getElementById("report-week-btn").addEventListener("click", () => setReportPreset("week"));
+    document.getElementById("report-month-btn").addEventListener("click", () => setReportPreset("month"));
+    document.getElementById("generate-report-btn").addEventListener("click", generateReport);
+    document.getElementById("missing-today-btn").addEventListener("click", showMissingToday);
+    document.getElementById("export-report-btn").addEventListener("click", exportReportCsv);
+    document.getElementById("report-search").addEventListener("input", renderReportStudents);
 
     // Membuka izin audio browser pada interaksi pertama pengguna.
     const unlockAudio = () => {
@@ -985,6 +1115,7 @@
       APP.logs = Array.isArray(response.logs) ? response.logs : [];
       APP.dashboard = response.dashboard || APP.dashboard;
 
+      populateReportClasses();
       renderAll();
       setConnection("success", "Terhubung dengan Google Sheets · sinkron otomatis");
     } catch (error) {
@@ -1369,7 +1500,6 @@
     renderDashboard();
     renderDashboardActivity();
     renderStudents();
-    renderHistory();
     renderScanHistory();
   }
 
@@ -1479,6 +1609,330 @@
         </td>
       </tr>
     `).join("");
+  }
+
+  function localDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function initializeReportFilters() {
+    setReportPreset("month", false);
+  }
+
+  function setReportPreset(mode, autoLoad = true) {
+    APP.reportMode = mode;
+
+    const now = new Date();
+    let start = new Date(now);
+    let end = new Date(now);
+
+    if (mode === "week") {
+      const day = now.getDay();
+      const distanceToMonday = day === 0 ? -6 : 1 - day;
+      start.setDate(now.getDate() + distanceToMonday);
+    } else if (mode === "month") {
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    document.getElementById("report-start-date").value = localDateKey(start);
+    document.getElementById("report-end-date").value = localDateKey(end);
+
+    const map = {
+      today: "report-today-btn",
+      week: "report-week-btn",
+      month: "report-month-btn"
+    };
+
+    document.querySelectorAll(".report-preset-btn").forEach(button => {
+      button.className = "report-preset-btn px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-extrabold text-slate-700 hover:bg-slate-50";
+    });
+
+    const active = document.getElementById(map[mode]);
+    if (active) {
+      active.className = "report-preset-btn px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-extrabold hover:bg-indigo-700";
+    }
+
+    if (autoLoad) generateReport();
+  }
+
+  function populateReportClasses() {
+    const select = document.getElementById("report-class");
+    if (!select) return;
+
+    const current = select.value || "Semua";
+    const classes = [...new Set(APP.students.map(student => student.kelas).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "id"));
+
+    select.innerHTML = '<option value="Semua">Semua Kelas</option>' +
+      classes.map(kelas => `<option value="${escapeAttr(kelas)}">${escapeHtml(kelas)}</option>`).join("");
+
+    if ([...select.options].some(option => option.value === current)) {
+      select.value = current;
+    }
+  }
+
+  async function generateReport() {
+    const startDate = document.getElementById("report-start-date").value;
+    const endDate = document.getElementById("report-end-date").value;
+    const kelas = document.getElementById("report-class").value;
+
+    if (!startDate || !endDate) {
+      showToast("Tanggal Belum Lengkap", "Isi tanggal awal dan tanggal akhir.", "warning");
+      return;
+    }
+
+    setReportLoading(true);
+
+    try {
+      const response = await apiGet("getReport", {
+        startDate,
+        endDate,
+        kelas,
+        t: Date.now()
+      });
+
+      if (!response || response.status !== "success") {
+        throw new Error(response?.message || "Laporan gagal dimuat.");
+      }
+
+      APP.report = response.report;
+      renderReport();
+    } catch (error) {
+      showToast("Laporan Gagal", error.message || String(error), "error");
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  async function showMissingToday() {
+    const kelas = document.getElementById("report-class").value;
+    const today = localDateKey(new Date());
+
+    setReportLoading(true);
+
+    try {
+      const response = await apiGet("getMissingStudents", {
+        date: today,
+        kelas,
+        t: Date.now()
+      });
+
+      if (!response || response.status !== "success") {
+        throw new Error(response?.message || "Data siswa tidak scan gagal dimuat.");
+      }
+
+      const students = Array.isArray(response.students) ? response.students : [];
+
+      APP.report = {
+        startDate: today,
+        endDate: today,
+        kelas,
+        effectiveDayCount: response.isEffectiveDay ? 1 : 0,
+        totalStudents: response.totalStudents || 0,
+        totalBrought: response.checkedCount || 0,
+        totalMissing: response.missingCount || 0,
+        percentage: response.totalStudents
+          ? Number((((response.checkedCount || 0) / response.totalStudents) * 100).toFixed(1))
+          : 0,
+        byClass: buildMissingClassSummary(students, response),
+        students: students.map(student => ({
+          ...student,
+          broughtCount: 0,
+          missingCount: 1,
+          percentage: 0,
+          missingDates: [today]
+        }))
+      };
+
+      renderReport();
+
+      if (!response.isEffectiveDay) {
+        showToast("Bukan Hari Efektif", response.message || "Tanggal ini tidak dihitung sebagai hari sekolah.", "warning");
+      }
+    } catch (error) {
+      showToast("Data Gagal", error.message || String(error), "error");
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  function buildMissingClassSummary(missingStudents, response) {
+    const grouped = {};
+    missingStudents.forEach(student => {
+      if (!grouped[student.kelas]) {
+        grouped[student.kelas] = {
+          kelas: student.kelas,
+          totalStudents: 0,
+          broughtCount: 0,
+          missingCount: 0,
+          percentage: 0
+        };
+      }
+      grouped[student.kelas].missingCount++;
+    });
+
+    return Object.values(grouped).sort((a, b) => a.kelas.localeCompare(b.kelas, "id"));
+  }
+
+  function setReportLoading(loading) {
+    document.getElementById("report-loading").classList.toggle("hidden", !loading);
+    document.getElementById("report-content").classList.toggle("opacity-50", loading);
+    document.getElementById("generate-report-btn").disabled = loading;
+    document.getElementById("missing-today-btn").disabled = loading;
+  }
+
+  function renderReport() {
+    if (!APP.report) return;
+
+    const report = APP.report;
+
+    document.getElementById("report-effective-days").textContent = report.effectiveDayCount || 0;
+    document.getElementById("report-total-students").textContent = report.totalStudents || 0;
+    document.getElementById("report-total-brought").textContent = report.totalBrought || 0;
+    document.getElementById("report-total-missing").textContent = report.totalMissing || 0;
+
+    document.getElementById("report-period-label").textContent =
+      `${formatDateKey(report.startDate)} sampai ${formatDateKey(report.endDate)} · ${report.kelas || "Semua Kelas"}`;
+
+    const classBody = document.getElementById("report-class-table");
+    const classes = Array.isArray(report.byClass) ? report.byClass : [];
+
+    if (!classes.length) {
+      classBody.innerHTML = '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Tidak ada data kelas.</td></tr>';
+    } else {
+      classBody.innerHTML = classes.map(item => `
+        <tr class="hover:bg-slate-50">
+          <td class="px-4 py-4 font-extrabold text-slate-900">${escapeHtml(item.kelas)}</td>
+          <td class="px-4 py-4 text-center">${item.totalStudents || 0}</td>
+          <td class="px-4 py-4 text-center font-bold text-emerald-600">${item.broughtCount || 0}</td>
+          <td class="px-4 py-4 text-center font-bold text-rose-600">${item.missingCount || 0}</td>
+          <td class="px-4 py-4 text-center">
+            <span class="inline-flex px-3 py-1.5 rounded-full text-xs font-extrabold ${
+              Number(item.percentage || 0) >= 90
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-amber-50 text-amber-700"
+            }">${Number(item.percentage || 0)}%</span>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    renderReportStudents();
+  }
+
+  function renderReportStudents() {
+    const body = document.getElementById("report-student-table");
+    if (!body || !APP.report) return;
+
+    const keyword = document.getElementById("report-search").value.trim().toLowerCase();
+    const students = (APP.report.students || []).filter(student => {
+      const text = `${student.nis} ${student.nama} ${student.kelas}`.toLowerCase();
+      return text.includes(keyword);
+    });
+
+    if (!students.length) {
+      body.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-slate-400">Tidak ada siswa pada kriteria ini.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = students.map(student => `
+      <tr class="hover:bg-slate-50">
+        <td class="px-4 py-4 font-mono text-xs">${escapeHtml(student.nis)}</td>
+        <td class="px-4 py-4 font-extrabold text-slate-900">${escapeHtml(student.nama)}</td>
+        <td class="px-4 py-4">${escapeHtml(student.kelas)}</td>
+        <td class="px-4 py-4 text-center font-bold text-emerald-600">${student.broughtCount || 0}</td>
+        <td class="px-4 py-4 text-center">
+          <span class="inline-flex px-3 py-1.5 rounded-full text-xs font-extrabold ${
+            Number(student.missingCount || 0) > 0
+              ? "bg-rose-50 text-rose-700"
+              : "bg-emerald-50 text-emerald-700"
+          }">${student.missingCount || 0}</span>
+        </td>
+        <td class="px-4 py-4 text-center font-bold">${Number(student.percentage || 0)}%</td>
+        <td class="px-4 py-4 text-xs text-slate-500 max-w-xs">
+          ${(student.missingDates || []).length
+            ? student.missingDates.map(formatDateKey).join(", ")
+            : "—"}
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function exportReportCsv() {
+    if (!APP.report || !(APP.report.students || []).length) {
+      showToast("Belum Ada Data", "Tampilkan laporan terlebih dahulu.", "warning");
+      return;
+    }
+
+    const rows = [
+      ["NIS", "Nama", "Kelas", "Membawa Kartu", "Tidak Scan", "Persentase", "Tanggal Tidak Scan"],
+      ...APP.report.students.map(student => [
+        student.nis,
+        student.nama,
+        student.kelas,
+        student.broughtCount || 0,
+        student.missingCount || 0,
+        `${Number(student.percentage || 0)}%`,
+        (student.missingDates || []).join(" | ")
+      ])
+    ];
+
+    const csv = "\uFEFF" + rows.map(row =>
+      row.map(value => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")
+    ).join("\r\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `Rekap_Kartu_${APP.report.startDate}_${APP.report.endDate}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function formatDateKey(key) {
+    if (!key) return "-";
+    const [year, month, day] = key.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
+  function checkDayRollover() {
+    const today = localDateKey(new Date());
+
+    if (APP.currentDateKey && APP.currentDateKey !== today) {
+      APP.currentDateKey = today;
+      APP.logs = [];
+      APP.dashboard.checkedToday = 0;
+      APP.dashboard.notChecked = APP.dashboard.totalStudents || APP.students.length;
+      APP.dashboard.percentage = 0;
+
+      renderAll();
+      resetStudentDisplay();
+      loadBootstrap(true);
+      setReportPreset("today", false);
+
+      showToast(
+        "Hari Baru Dimulai",
+        "Riwayat hari ini sudah kembali kosong. Data hari sebelumnya tetap tersimpan untuk laporan.",
+        "success"
+      );
+    } else if (!APP.currentDateKey) {
+      APP.currentDateKey = today;
+    }
+  }
+
+  function resetStudentDisplay() {
+    const empty = document.getElementById("student-empty");
+    const result = document.getElementById("student-result");
+
+    if (empty) empty.classList.remove("hidden");
+    if (result) result.classList.add("hidden");
   }
 
   function renderHistory() {
@@ -1656,6 +2110,8 @@
         now.toLocaleTimeString("id-ID", { hour12: false }) + " WIB";
       document.getElementById("date-short").textContent =
         now.toLocaleDateString("id-ID", { weekday: "short", day: "2-digit", month: "short" });
+
+      checkDayRollover();
     };
 
     update();
