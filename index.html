@@ -1010,13 +1010,13 @@
 
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden && APP.initialSyncFinished) {
-        loadBootstrap(true);
+        refreshTodayActivity(true);
       }
     });
 
     window.addEventListener("focus", () => {
       if (APP.initialSyncFinished) {
-        loadBootstrap(true);
+        refreshTodayActivity(true);
       }
     });
   }
@@ -1186,43 +1186,57 @@
   }
 
   async function loadBootstrap(silent = false, throwOnError = false) {
-    if (APP.isSyncing) {
-      if (throwOnError && APP.initialSyncPromise) {
-        return APP.initialSyncPromise;
-      }
-      return null;
-    }
+    if (APP.isSyncing) return null;
 
     APP.isSyncing = true;
 
     if (!silent) {
-      setConnection("loading", "Mengambil data dari Google Sheets...");
+      setConnection("loading", "Mengambil data siswa...");
     }
 
     try {
-      // Satu request saja. Dua request paralel ke Apps Script pada saat
-      // startup dapat saling menunggu dan membuat halaman baru selesai
-      // setelah tombol Sinkronkan ditekan.
-      const response = await apiGet(
-        "getBootstrap",
+      const studentResponse = await apiGet(
+        "getStudents",
         { t: Date.now() },
-        12000
+        15000
       );
 
-      if (!response || response.status !== "success") {
-        throw new Error(response?.message || "Data awal gagal dimuat.");
+      if (!studentResponse || studentResponse.status !== "success") {
+        throw new Error(
+          studentResponse?.message || "Data siswa gagal dimuat."
+        );
       }
 
-      APP.students = Array.isArray(response.students)
-        ? response.students
+      APP.students = Array.isArray(studentResponse.students)
+        ? studentResponse.students
         : [];
 
-      APP.logs = Array.isArray(response.logs)
-        ? response.logs
+      populateReportClasses();
+      renderStudents();
+
+      if (!silent) {
+        setConnection("loading", "Mengambil aktivitas hari ini...");
+      }
+
+      const logResponse = await apiGet(
+        "getTodayLogs",
+        { t: Date.now() },
+        15000
+      );
+
+      if (!logResponse || logResponse.status !== "success") {
+        throw new Error(
+          logResponse?.message || "Aktivitas hari ini gagal dimuat."
+        );
+      }
+
+      APP.logs = Array.isArray(logResponse.logs)
+        ? logResponse.logs
         : [];
 
-      APP.dashboard = response.dashboard ||
-        buildClientDashboard(APP.students, APP.logs);
+      APP.dashboard = buildClientDashboard(APP.students, APP.logs);
+
+      renderAll();
 
       try {
         localStorage.setItem("smart-check-card-bootstrap", JSON.stringify({
@@ -1235,15 +1249,17 @@
         console.warn("Cache browser tidak dapat disimpan:", cacheError);
       }
 
-      populateReportClasses();
-      renderAll();
-
       setConnection(
         "success",
         `Terhubung dengan Google Sheets · ${APP.logs.length} aktivitas hari ini`
       );
 
-      return response;
+      return {
+        status: "success",
+        students: APP.students,
+        logs: APP.logs,
+        dashboard: APP.dashboard
+      };
 
     } catch (error) {
       if (!silent && !throwOnError) {
@@ -1293,7 +1309,7 @@
         !APP.scanBusy &&
         !APP.isSyncing
       ) {
-        loadBootstrap(true);
+        refreshTodayActivity(true);
       }
     }, APP.autoSyncIntervalMs);
   }
@@ -1326,9 +1342,15 @@
         return;
       }
 
-      if (response.log) {
-        const existingIndex = APP.logs.findIndex(log => String(log.nis) === String(response.log.nis));
-        if (existingIndex >= 0) APP.logs.splice(existingIndex, 1);
+      if (response.log && !response.isDuplicate) {
+        const existingIndex = APP.logs.findIndex(
+          log => String(log.nis) === String(response.log.nis)
+        );
+
+        if (existingIndex >= 0) {
+          APP.logs.splice(existingIndex, 1);
+        }
+
         APP.logs.unshift(response.log);
       }
 
@@ -1381,6 +1403,10 @@
       renderAll();
       setScannerStatus("standby");
 
+      // Ambil ulang daftar aktivitas resmi dari Google Sheets.
+      // Duplicate tidak pernah ditambahkan secara lokal.
+      refreshTodayActivity(true);
+
       if (response.isDuplicate) {
         playWarningBeep();
         showToast("Sudah Dicek", response.message, "warning");
@@ -1409,50 +1435,78 @@
     }
   }
 
-  async function apiGet(action, params = {}, timeoutMs = 15000) {
+  function apiGet(action, params = {}, timeoutMs = 15000) {
     validateGasUrl();
 
-    const url = new URL(GAS_URL);
-    url.searchParams.set("action", action);
+    return new Promise((resolve, reject) => {
+      const callbackName =
+        "__smartCheckCardJsonp_" +
+        Date.now() +
+        "_" +
+        Math.random().toString(36).slice(2);
 
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && String(value).trim() !== "") {
-        url.searchParams.set(key, String(value));
-      }
-    });
+      const url = new URL(GAS_URL);
+      url.searchParams.set("action", action);
+      url.searchParams.set("callback", callbackName);
+      url.searchParams.set("_", Date.now());
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        redirect: "follow",
-        cache: "no-store",
-        signal: controller.signal
+      Object.entries(params).forEach(([key, value]) => {
+        if (
+          value !== undefined &&
+          value !== null &&
+          String(value).trim() !== ""
+        ) {
+          url.searchParams.set(key, String(value));
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Server merespons HTTP ${response.status}.`);
-      }
+      const script = document.createElement("script");
+      let finished = false;
 
-      const text = await response.text();
+      const cleanup = () => {
+        if (script.parentNode) script.parentNode.removeChild(script);
+        try {
+          delete window[callbackName];
+        } catch (error) {
+          window[callbackName] = undefined;
+        }
+      };
 
-      try {
-        return JSON.parse(text);
-      } catch (error) {
-        throw new Error(
-          "Respons backend bukan JSON. Pastikan deployment /exec sudah versi terbaru."
+      const timer = setTimeout(() => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        reject(
+          new Error(
+            "Koneksi awal ke Google Sheets terlalu lama. Silakan periksa internet atau deployment Apps Script."
+          )
         );
-      }
-    } catch (error) {
-      if (error.name === "AbortError") {
-        throw new Error("Koneksi ke Google Sheets terlalu lama dan dihentikan.");
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
+      }, timeoutMs);
+
+      window[callbackName] = data => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        cleanup();
+        resolve(data);
+      };
+
+      script.onerror = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        cleanup();
+        reject(
+          new Error(
+            "Gagal memuat data dari Apps Script. Pastikan Web App dapat diakses oleh Anyone."
+          )
+        );
+      };
+
+      script.async = true;
+      script.src = url.toString();
+      document.head.appendChild(script);
+    });
   }
 
   async function apiPost(action, payload = {}) {
@@ -1594,6 +1648,56 @@
     // Dua beep: kartu gagal dikenali atau sudah pernah discan.
     playTone(520, 0.14, 0, 0.18);
     playTone(520, 0.14, 0.22, 0.18);
+  }
+
+  async function refreshTodayActivity(silent = false) {
+    if (APP.isSyncing) return;
+
+    APP.isSyncing = true;
+
+    try {
+      const response = await apiGet(
+        "getTodayLogs",
+        { t: Date.now() },
+        12000
+      );
+
+      if (!response || response.status !== "success") {
+        throw new Error(response?.message || "Aktivitas hari ini gagal dimuat.");
+      }
+
+      APP.logs = Array.isArray(response.logs) ? response.logs : [];
+      APP.dashboard = buildClientDashboard(APP.students, APP.logs);
+
+      renderScanHistory();
+      renderDashboardActivity();
+      renderStudents();
+      renderDashboard();
+
+      setConnection(
+        "success",
+        `Terhubung dengan Google Sheets · ${APP.logs.length} aktivitas hari ini`
+      );
+
+      try {
+        localStorage.setItem("smart-check-card-bootstrap", JSON.stringify({
+          students: APP.students,
+          logs: APP.logs,
+          dashboard: APP.dashboard,
+          savedAt: Date.now()
+        }));
+      } catch (cacheError) {
+        console.warn("Cache aktivitas tidak dapat disimpan:", cacheError);
+      }
+
+    } catch (error) {
+      if (!silent) {
+        showToast("Sinkronisasi Gagal", error.message || String(error), "error");
+      }
+      console.warn("Refresh aktivitas gagal:", error);
+    } finally {
+      APP.isSyncing = false;
+    }
   }
 
   function showStudentResult(student, log, method, duplicate) {
