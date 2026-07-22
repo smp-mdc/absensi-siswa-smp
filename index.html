@@ -987,9 +987,7 @@
     audioContext: null,
     currentDateKey: "",
     report: null,
-    reportMode: "monthly",
-    startupRetryCount: 0,
-    maxStartupRetries: 3
+    reportMode: "monthly"
   };
 
   document.addEventListener("DOMContentLoaded", initApp);
@@ -1003,7 +1001,7 @@
     initializeReportFilters();
     switchTab("scan");
     loadCachedBootstrap();
-    startInitialSync();
+    loadBootstrap();
     startAutoSync();
 
     document.addEventListener("visibilitychange", () => {
@@ -1024,10 +1022,7 @@
   }
 
   function bindEvents() {
-    document.getElementById("sync-btn").addEventListener("click", async () => {
-      APP.isSyncing = false;
-      await loadBootstrap(false);
-    });
+    document.getElementById("sync-btn").addEventListener("click", () => loadBootstrap(false));
     document.getElementById("submit-scan-btn").addEventListener("click", () => {
       processScan(document.getElementById("barcode-input").value, "Barcode / Manual");
     });
@@ -1100,43 +1095,6 @@
     }
   }
 
-  async function startInitialSync() {
-    APP.startupRetryCount = 0;
-
-    while (APP.startupRetryCount < APP.maxStartupRetries) {
-      try {
-        await loadBootstrap(false, true);
-        return;
-      } catch (error) {
-        APP.startupRetryCount++;
-
-        if (APP.startupRetryCount >= APP.maxStartupRetries) {
-          setConnection(
-            "error",
-            "Belum terhubung. Tekan Sinkronkan untuk mencoba lagi."
-          );
-          showToast(
-            "Koneksi Belum Siap",
-            "Server Google Apps Script belum merespons. Tekan tombol Sinkronkan.",
-            "warning"
-          );
-          return;
-        }
-
-        setConnection(
-          "loading",
-          `Mencoba koneksi ulang (${APP.startupRetryCount + 1}/${APP.maxStartupRetries})...`
-        );
-
-        await wait(1200 * APP.startupRetryCount);
-      }
-    }
-  }
-
-  function wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   function loadCachedBootstrap() {
     try {
       const raw = localStorage.getItem("smart-check-card-bootstrap");
@@ -1153,15 +1111,8 @@
     }
   }
 
-  async function loadBootstrap(silent = false, throwOnError = false) {
-    if (APP.isSyncing) {
-      if (throwOnError) {
-        await wait(400);
-        return loadBootstrap(silent, throwOnError);
-      }
-      return;
-    }
-
+  async function loadBootstrap(silent = false) {
+    if (APP.isSyncing) return;
     APP.isSyncing = true;
 
     if (!silent) {
@@ -1169,11 +1120,9 @@
     }
 
     try {
-      const response = await apiGet(
-        "getBootstrap",
-        { t: Date.now() },
-        15000
-      );
+      const response = await apiGet("getBootstrap", {
+        t: Date.now()
+      });
 
       if (!response || response.status !== "success") {
         throw new Error(response?.message || "Respons server tidak valid.");
@@ -1197,18 +1146,12 @@
       populateReportClasses();
       renderAll();
       setConnection("success", "Terhubung dengan Google Sheets · sinkron otomatis");
-      return response;
-
     } catch (error) {
-      if (!silent && !throwOnError) {
+      if (!silent) {
         handleServerError(error.message || String(error));
       } else {
-        console.warn("Sinkronisasi gagal:", error);
+        console.warn("Sinkronisasi otomatis gagal:", error);
       }
-
-      if (throwOnError) throw error;
-      return null;
-
     } finally {
       APP.isSyncing = false;
     }
@@ -1337,7 +1280,7 @@
     }
   }
 
-  async function apiGet(action, params = {}, timeoutMs = 15000) {
+  async function apiGet(action, params = {}) {
     validateGasUrl();
 
     const url = new URL(GAS_URL);
@@ -1349,37 +1292,24 @@
       }
     });
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      redirect: "follow",
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server merespons HTTP ${response.status}.`);
+    }
+
+    const text = await response.text();
 
     try {
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        redirect: "follow",
-        cache: "no-store",
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server merespons HTTP ${response.status}.`);
-      }
-
-      const text = await response.text();
-
-      try {
-        return JSON.parse(text);
-      } catch (error) {
-        throw new Error(
-          "Respons backend bukan JSON. Pastikan deployment /exec sudah versi terbaru."
-        );
-      }
+      return JSON.parse(text);
     } catch (error) {
-      if (error.name === "AbortError") {
-        throw new Error("Koneksi ke Google Sheets terlalu lama dan dihentikan.");
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
+      throw new Error(
+        "Respons backend bukan JSON. Pastikan URL GAS_URL memakai deployment /exec backend-only terbaru."
+      );
     }
   }
 
